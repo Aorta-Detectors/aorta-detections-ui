@@ -1,0 +1,24 @@
+:root {
+  --md-source: #297982;
+  --color-bg: #fafafa;
+  /* primary */
+  --primary0: #297982;
+  --primary10: #2d8d99;
+  --primary20: #31a2b3;
+  --primary30: #35b1c5;
+  --primary40: #40bccd;
+  --primary50: #58c8d6;
+  --primary60: #83d8e2;
+  --primary70: #b3e7ed;
+  --primary80: #e0f6f8;
+
+  /* secondary */
+  --secondary0: #b0b0b0;
+  --secondary10: #d5d5d5;
+  --secondary20: #e6e6e6;
+  --secondary30: #f0f0f0;
+  --secondary40: #f8f8f8;
+
+  /* neutral-variant */
+
+}

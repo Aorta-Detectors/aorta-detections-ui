@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Kodchasan:wght@200&family=Niramit:wght@200&display=swap');
+
+@import "tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    background: var(--color-bg);
+}
+
+@layer components {
+    .logo {
+        font-family: 'Kodchasan', sans-serif;
+        @apply text-xl lg:text-3xl font-extrabold;
+    }
+
+    .ad-checkbox{
+       @apply w-4 h-4 text-blue-600 bg-gray-100 accent-theme-primary10 border-gray-300 rounded
+    }
+
+    .ad-input{
+        @apply  border border-gray-300 text-gray-900 text-sm rounded-md block w-full px-2.5 py-3 focus:outline-theme-primary10 w-full
+    }
+
+    .ad-primary-btn {
+        @apply text-white bg-theme-primary10 hover:bg-theme-primary0 font-medium rounded-md text-xl px-5 py-3 mr-2 focus:outline-none
+    }
+    .ad-primary-btn-not-active {
+        @apply text-white bg-theme-primary10 hover:bg-amber-500 bg-opacity-25 font-medium rounded-md text-sm px-5 py-3 mr-2 focus:outline-none
+    }
+
+    .fieldset-input-label {
+        @apply absolute inset-y-0 left-0 flex items-center text-gray-500 pl-3.5 pointer-events-none
+    }
+
+    .radio-input{
+        @apply w-4 h-4 text-yellow-600 accent-theme-primary10 bg-gray-100 border-gray-300 focus:outline-none
+    }
+
+}
