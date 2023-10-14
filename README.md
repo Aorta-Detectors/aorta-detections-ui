@@ -18,6 +18,9 @@ npm run dev
 Or
 
 yarn dev
+
+Login page : http://localhost:5173/login
+Sign Up page : http://localhost:5173/register
 ```
 
 ### Type-Check, Compile and Minify for Production
