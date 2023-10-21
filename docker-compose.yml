@@ -1,0 +1,11 @@
+version: '1'
+services:
+  aorta_detection_ui:
+    container_name: aorta_detection_ui
+    image: madouma2/aorta_detection_ui:latest
+    ports:
+      - "8080:80"
+
+
+
+
