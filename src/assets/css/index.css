@@ -21,7 +21,7 @@ body {
     }
 
     .ad-input{
-        @apply  border border-gray-300 text-gray-900 text-sm rounded-md block w-full px-2.5 py-3 focus:outline-theme-primary10 w-full
+        @apply  border border-gray-300 text-gray-900 text-sm rounded-md block  px-2.5 py-3 focus:outline-theme-primary10 w-full
     }
 
     .ad-primary-btn {

@@ -9,23 +9,23 @@ import {  RouterView } from 'vue-router'
   </div>
 </template>
 
-<style lang="scss" >
+<style  >
 .inner-bg {
   height: 100vh;
   width: 100%;
   position: relative;
-  &:before {
-    content: '';
-    margin-top: 0;
-    height: 100%;
-    width: 100%;
-    position: absolute;
-    background-position: center;
-    background-size: contain;
-    background-image: url(./assets/svg/medicine.svg);
-    background-repeat: no-repeat;
-    transform: scale(0.9);
-  }
+}
+.inner-bg:before {
+  content: '';
+  margin-top: 0;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  background-position: center;
+  background-size: contain;
+  background-image: url(./assets/svg/medicine.svg);
+  background-repeat: no-repeat;
+  transform: scale(0.9);
 }
 
 .login-container {
