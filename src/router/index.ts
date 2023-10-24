@@ -3,6 +3,7 @@ import HomePage from '../pages/HomePage.vue'
 import NotFoundPage from '../pages/NotFoundPage.vue'
 import { SecurityRoutes } from '@/services/security/router'
 import NavbarComponent from '../components/NavbarComponent.vue'
+import { PatientRoutes } from '@/services/patient/router'
 
 const routes = [
   {
@@ -15,6 +16,8 @@ const routes = [
   },
 
   ...SecurityRoutes,
+
+  ...PatientRoutes,
 
   {
     path: '/404',
