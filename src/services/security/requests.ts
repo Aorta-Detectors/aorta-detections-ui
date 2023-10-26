@@ -1,18 +1,32 @@
-import { API } from '@/http/api'
+import commonApi from '@/http/commonApi'
+import type {
+  TUser,
+  TUserLoginRequest,
+  TUserLoginResponse,
+  TUserRegistrationRequest
+} from '@/services/security/types'
+import api from '@/http'
 
-const serviceBasePath = '/login'
+const authBasePath = '/auth'
 
-export const SecurityRequests = {
-  postRegisterUser(payload) {
-    return API.makePostRequest(`${serviceBasePath}/register`, payload)
-  },
+export default class SecurityRequests {
+  static async login(payloadParams: TUserLoginRequest) {
+    return commonApi().post<TUserLoginResponse>(`${authBasePath}/login`, payloadParams)
+  }
 
-  postLogin(payload) {
-    return API.makePostRequest(`${serviceBasePath}/auth`, payload)
-  },
+  static async registration(payloadParams: TUserRegistrationRequest) {
+    return commonApi().post<TUser>(`${authBasePath}/register`, payloadParams)
+  }
 
-  getUserMe() {
-    return API.makeGetRequest(`users/me`)
-  },
+  static async logout() {
+    return api().get<{ status: string }>(`${authBasePath}/logout`)
+  }
 
+  static async refreshToken() {
+    return commonApi().get<TUserLoginResponse>(`${authBasePath}/refresh`)
+  }
+
+  static async getMe() {
+    return api().get<TUser>(`/info/me`)
+  }
 }
