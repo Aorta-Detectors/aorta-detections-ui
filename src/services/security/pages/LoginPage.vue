@@ -37,10 +37,10 @@ export default {
     return {
       loginForm: {
         email: {
-          required: helpers.withMessage('Email is required', required)
+          required: helpers.withMessage('Email - это обязательное поле', required)
         },
         password: {
-          required: helpers.withMessage('Password is required', required)
+          required: helpers.withMessage('Пароль - это обязательное поле', required)
         }
       }
     }
@@ -57,8 +57,8 @@ export default {
       >
         <div>
           <div class="my-10 text-center">
-            <h1 class="text-black logo text-4xl">Welcome back</h1>
-            <p class="py-4 text-gray-400">Please enter your credentials</p>
+            <h1 class="text-black logo text-4xl">Добро пожаловать</h1>
+            <p class="py-4 text-gray-400">Пожалуйста, введите логин и пароль</p>
           </div>
           <div class="w-full mt-10 px-4 sm:px-8">
             <form @submit.prevent="login" class="space-y-4 md:space-y-6">
@@ -77,7 +77,7 @@ export default {
               </div>
               <div>
                 <label for="password" class="block mb-2 text-sm font-medium text-gray-900"
-                  >Password</label
+                  >Пароль</label
                 >
                 <input
                   v-model="v$.loginForm.password.$model"
@@ -90,18 +90,18 @@ export default {
               </div>
               <div class="">
                 <button type="submit" class="ad-primary-btn w-full">
-                  {{ loading ? 'Processing...' : 'Login' }}
+                  {{ loading ? 'Загрузка...' : 'Войти' }}
                 </button>
               </div>
             </form>
           </div>
         </div>
         <div class="text-sm font-light text-gray-500 mt-4 justify-center space-x-4 flex">
-          <p>Don't have an account?</p>
+          <p>Нет аккаунта?</p>
           <router-link
             :to="{ name: 'RegisterPage' }"
             class="font-medium text-primary-600 hover:underline"
-            >Sign Up</router-link
+            >Зарегестрироваться</router-link
           >
         </div>
       </div>
