@@ -1,37 +1,60 @@
 import AddPatient from '@/services/patient/pages/AddPatient.vue'
 import Dashboard from '@/services/patient/pages/Dashboard.vue'
-import AsideNav from '@/services/patient/parials/AsideNav.vue'
 import MainPatientPage from '@/services/patient/pages/MainPatientPage.vue'
-import NavbarComponent from '@/components/NavbarComponent.vue'
-
+import PatientsHistory from '@/services/patient/pages/PatientsHistory.vue'
+import PatientList from '@/services/patient/pages/PatientList.vue'
+import PersonalAccountPage from '@/services/patient/pages/PersonalAccountPage.vue'
 
 export const PatientRoutes = [
   {
     path: '/space',
     name: 'MainPatientPage',
-    components: { default: MainPatientPage, asideNav: AsideNav, header: NavbarComponent },
+    component: MainPatientPage,
     meta: {
-      PageTitle: 'Add Patient ',
-      guest: true
+      PageTitle: 'Add Patient',
+      requiredAuth: true
     },
 
     children: [
       {
-        path: 'add',
-        name: 'AddPatient',
-        components: { default: AddPatient},
+        path: 'dashboard',
+        alias: '',
+        name: 'Dashboard',
+        components: { default: Dashboard },
         meta: {
-          PageTitle: 'Add Patient ',
-          guest: true
+          PageTitle: 'Dashboard'
         }
       },
       {
-        path: 'dashboard',
-        name: 'Dashboard',
-        components: { default: Dashboard},
+        path: 'add',
+        name: 'AddPatient',
+        components: { default: AddPatient },
         meta: {
-          PageTitle: 'Dashboard',
-          guest: true
+          PageTitle: 'Добавление пациента'
+        }
+      },
+      {
+        path: 'list',
+        name: 'PatientList',
+        components: { default: PatientList },
+        meta: {
+          PageTitle: 'Список пациентов'
+        }
+      },
+      {
+        path: 'history',
+        name: 'PatientsHistory',
+        components: { default: PatientsHistory },
+        meta: {
+          PageTitle: 'История работы'
+        }
+      },
+      {
+        path: 'account',
+        name: 'PersonalAccountPage',
+        components: { default: PersonalAccountPage },
+        meta: {
+          PageTitle: 'Личный кабинет'
         }
       }
     ]

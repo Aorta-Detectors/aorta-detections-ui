@@ -1,6 +1,6 @@
 import LoginPage from './pages/LoginPage.vue'
 import NavbarComponent from '../../components/NavbarComponent.vue'
-import PersonalAccountPage from './pages/PersonalAccountPage.vue'
+import PersonalAccountPage from '../patient/pages/PersonalAccountPage.vue'
 import RegisterPage from './pages/RegisterPage.vue'
 
 export const SecurityRoutes = [
@@ -22,14 +22,5 @@ export const SecurityRoutes = [
       guest: true
     }
   },
-  {
-    path: '/account',
-    name: 'PersonalAccountPage',
-    components: { default: PersonalAccountPage, header: NavbarComponent },
-    meta: {
-      authenticated: true,
 
-      PageTitle: 'Account'
-    }
-  },
 ]

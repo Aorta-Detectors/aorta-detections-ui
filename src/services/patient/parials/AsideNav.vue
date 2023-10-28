@@ -1,38 +1,39 @@
 <script setup lang="ts">
 import { MenuButton, Menu, MenuItems, MenuItem } from '@headlessui/vue'
-import {onBeforeMount} from "vue";
-import {storeToRefs} from "pinia";
+import { onBeforeMount } from 'vue'
+import { storeToRefs } from 'pinia'
 import HeroIcon from '@/components/common/HeroIcon.vue'
+import LogoComponent from '@/components/common/LogoComponent.vue'
+import { useUserStore } from '@/services/security/store'
 
+const userStore = useUserStore()
+const { user } = storeToRefs(userStore)
 
-/*const {authLogout,authGetMe } = useAuthStore()
-
-const { userData } = storeToRefs(useAuthStore());
 onBeforeMount(async () => {
-  await authGetMe()
-})*/
-
+  await userStore.getMe()
+})
 </script>
 
 <template>
   <nav
-    class="bg-gray-900 hidden lg:flex flex-col justify-between w-[16rem] text-white z-10 static start-0 bottom-0 top-0"
+    class="bg-theme-primary0 hidden lg:flex flex-col justify-between w-[16rem] text-white z-10 static start-0 bottom-0 top-0"
   >
     <div class="p-3">
-      <h1 class="logo">Madouma</h1>
+      <LogoComponent class="text-xl" />
 
       <div class="mt-8 space-y-2">
-        <router-link :to="{ name: 'AddPatient' }" class="btn" active-class="text-white bg-gray-800">
+        <router-link :to="{ name: 'Dashboard' }" class="btn" active-class="active-class-nav">
           <HeroIcon icon-type="outline" icon-name="HomeIcon" />
           <span>Dashboard</span>
         </router-link>
-        <router-link :to="{ name: 'AddPatient' }" class="btn" active-class="text-white bg-gray-800">
-          <HeroIcon icon-type="outline" icon-name="DocumentChartBarIcon" />
-          <span>Resumes</span>
+        <router-link :to="{ name: 'PatientsHistory' }" class="btn" active-class="active-class-nav">
+          <HeroIcon icon-type="outline" icon-name="ClockIcon" />
+          <span>История работы</span>
         </router-link>
-        <router-link :to="{ name: 'AddPatient' }" class="btn" active-class="text-white bg-gray-800">
-          <HeroIcon icon-type="outline" icon-name="PencilIcon" />
-          <span>Notes</span>
+
+        <router-link :to="{ name: 'PatientList' }" class="btn" active-class="active-class-nav">
+          <HeroIcon icon-type="outline" icon-name="UserGroupIcon" />
+          <span>Список пациентов</span>
         </router-link>
       </div>
     </div>
@@ -40,9 +41,9 @@ onBeforeMount(async () => {
       <div class="px-4">
         <Menu as="div" class="relative block w-full text-left">
           <div>
-            <MenuButton class="btn group">
-              <div class="w-8 h-8 bg-gray-800 group-hover:bg-gray-900 rounded-full"></div>
-              <div>name</div>
+            <MenuButton class="btn group text-white capitalize">
+              <div class="w-8 h-8 bg-theme-primary10 rounded-full flex flex-shrink-0"></div>
+              <div class="truncate">{{ user?.first_name }}</div>
             </MenuButton>
           </div>
 
@@ -59,25 +60,26 @@ onBeforeMount(async () => {
             >
               <div class="py-1 divide-y">
                 <MenuItem v-slot="{ active }">
-                  <button
+                  <router-link
+                    :to="{ name: 'PersonalAccountPage' }"
                     :class="[
                       active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
                       'block px-4 py-2 text-sm text-left w-full'
                     ]"
                   >
-                    Settings
-                  </button>
+                    Личный кабинет
+                  </router-link>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
                   <button
-                    @click.prevent="authLogout()"
                     type="button"
+                    @click.prevent="userStore.logout()"
                     :class="[
                       active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
                       'block px-4 py-2 text-sm text-left w-full'
                     ]"
                   >
-                    Log Out
+                    Выйти
                   </button>
                 </MenuItem>
               </div>

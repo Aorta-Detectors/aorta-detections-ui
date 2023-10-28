@@ -1,52 +1,52 @@
-<script>
+<script setup>
 import useVuelidate from '@vuelidate/core'
-import { required, helpers } from '@vuelidate/validators'
+import { required, helpers, email } from '@vuelidate/validators'
 import ErrorComponent from '../../../components/common/ErrorComponent.vue'
-import LogoComponent from '@/components/common/LogoComponent.vue'
-import SinglePage from '@/pages/layout/SinglePage.vue'
-export default {
-  name: 'LoginPage',
-  components: { SinglePage, LogoComponent, ErrorComponent },
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useUserStore } from '@/services/security/store'
+import { storeToRefs } from 'pinia'
+import {   useRouter } from 'vue-router'
 
-  data() {
-    return {
-      v$: useVuelidate(),
+const router = useRouter()
+const userStore = useUserStore()
+const {status} = storeToRefs(userStore)
 
-      loginForm: {
-        email: '',
-        password: ''
-      }
-    }
-  },
 
-  computed: {
-    loading() {
-      return false
-    }
-  },
+const loading = ref(false)
 
-  methods: {
-    login() {
-      this.v$.loginForm.$touch()
-      if (!this.v$.loginForm.$error) {
-        //TODO: submit form
-      }
-    }
-  },
+const loginForm = reactive({
+  email: '',
+  password: ''
+})
 
-  validations() {
-    return {
-      loginForm: {
-        email: {
-          required: helpers.withMessage('Email - это обязательное поле', required)
-        },
-        password: {
-          required: helpers.withMessage('Пароль - это обязательное поле', required)
-        }
-      }
+const rules = computed(() => ({
+  loginForm: {
+    email: {
+      required: helpers.withMessage('Email - это обязательное поле', required),
+      email: helpers.withMessage('Неверный email ', email)
+    },
+    password: {
+      required: helpers.withMessage('Пароль - это обязательное поле', required)
     }
   }
+}))
+
+onMounted(()=> {
+  if(status.value){
+    router.push({name: 'Dashboard'})
+  }
+  status.value
+})
+
+const v$ = useVuelidate(rules, { loginForm })
+
+async function login() {
+  v$.value.$touch()
+  if (!v$.value.$error) {
+     await userStore.login(loginForm)
+  }
 }
+
 </script>
 
 <template>
@@ -58,7 +58,7 @@ export default {
       >
         <div>
           <div class="my-10 text-center">
-            <h1 class="text-black logo text-4xl">Добро пожаловать</h1>
+            <router-link to='/' class="text-black logo text-4xl">Добро пожаловать</router-link>
             <p class="py-4 text-gray-400">Пожалуйста, введите логин и пароль</p>
           </div>
           <div class="w-full mt-10 px-4 sm:px-8">

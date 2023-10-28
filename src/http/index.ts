@@ -1,4 +1,5 @@
-import axios, { AxiosError, AxiosRequestConfig } from 'axios';
+import axios, { AxiosError } from 'axios'
+import type { AxiosRequestConfig } from 'axios'
 const api = (
   dispatch: TAppDispatch | null = null,
   logout: AsyncThunk<void, void, {}> | null = null,
@@ -10,7 +11,12 @@ const api = (
   }
 
   const setHeader = (config: AxiosRequestConfig) => {
-    config.headers.Authorization = `Bearer ${localStorage.getItem('ad-token')}`
+    let tokens = JSON.parse(localStorage.getItem('ad-token'))
+
+    if (tokens !== null) {
+      config.headers.Authorization = `Bearer ${tokens?.access_token}`
+    }
+
     return config
   }
 

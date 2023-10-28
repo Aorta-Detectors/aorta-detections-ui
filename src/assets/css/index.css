@@ -16,6 +16,14 @@ body {
         @apply text-xl lg:text-3xl font-extrabold;
     }
 
+    .btn {
+        @apply  rounded flex justify-items-start items-center px-4 py-3 w-full space-x-4 transition-colors duration-150  text-white hover:text-white hover:bg-theme-primary20;
+    }
+
+    .active-class-nav {
+        @apply text-white bg-theme-primary10
+    }
+
     .ad-checkbox{
        @apply w-4 h-4 text-blue-600 bg-gray-100 accent-theme-primary10 border-gray-300 rounded
     }
