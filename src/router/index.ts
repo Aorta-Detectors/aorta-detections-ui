@@ -9,7 +9,7 @@ const routes = [
   {
     path: '/',
     name: 'HomePage',
-    components: { default: HomePage, header: NavbarComponent },
+    components: { default: HomePage },
     meta: {
       PageTitle: 'Aorta Detection'
     }

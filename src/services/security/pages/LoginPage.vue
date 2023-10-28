@@ -3,9 +3,10 @@ import useVuelidate from '@vuelidate/core'
 import { required, helpers } from '@vuelidate/validators'
 import ErrorComponent from '../../../components/common/ErrorComponent.vue'
 import LogoComponent from '@/components/common/LogoComponent.vue'
+import SinglePage from '@/pages/layout/SinglePage.vue'
 export default {
   name: 'LoginPage',
-  components: { LogoComponent, ErrorComponent },
+  components: { SinglePage, LogoComponent, ErrorComponent },
 
   data() {
     return {
