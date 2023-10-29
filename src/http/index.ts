@@ -1,6 +1,7 @@
 import axios, { AxiosError } from 'axios'
 import type { AxiosRequestConfig } from 'axios'
 import SecurityRequests from '@/services/security/requests'
+import router from '@/router'
 
 const api = () => {
   const axiosConfig = {
@@ -19,13 +20,18 @@ const api = () => {
   }
 
   const refreshAndRetry = async (error: AxiosError<AxiosRequestConfig>) => {
-    const originalRequest: AxiosRequestConfig & { _isRetry?: boolean } = error?.config;
-    if(error && error.response && error.response.status === 401 && originalRequest && !originalRequest._isRetry ){
+    const originalRequest: AxiosRequestConfig & { _isRetry?: boolean } = error?.config
+    if (
+      error &&
+      error.response &&
+      error.response.status === 401 &&
+      originalRequest &&
+      !originalRequest._isRetry
+    ) {
       originalRequest._isRetry = true
       try {
-        const {status, data} = await SecurityRequests.refreshToken()
-        if(status === 200){
-          // TODO: Update user infos
+        const { status, data } = await SecurityRequests.refreshToken()
+        if (status === 200) {
           localStorage.setItem(
             'ad-token',
             JSON.stringify({
@@ -35,11 +41,17 @@ const api = () => {
           )
         }
 
-      }catch (e) {
+        originalRequest.headers['Authorization'] = `Bearer ${data.access_toke}`
+        return axiosInstance(originalRequest)
+      } catch (e) {
         console.error('Вы не авторизованы!') // TODO: add toast modal
-        //await SecurityRequests.logout()
+        await router.push('/login')
+      } finally {
+        originalRequest._isRetry = false
       }
     }
+
+    return Promise.reject(error)
   }
   const api = axios.create(axiosConfig)
 
