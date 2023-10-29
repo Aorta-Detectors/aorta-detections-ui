@@ -5,12 +5,11 @@ import ErrorComponent from '../../../components/common/ErrorComponent.vue'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useUserStore } from '@/services/security/store'
 import { storeToRefs } from 'pinia'
-import {   useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const userStore = useUserStore()
-const {status} = storeToRefs(userStore)
-
+const { status } = storeToRefs(userStore)
 
 const loading = ref(false)
 
@@ -31,9 +30,9 @@ const rules = computed(() => ({
   }
 }))
 
-onMounted(()=> {
-  if(status.value){
-    router.push({name: 'Dashboard'})
+onMounted(() => {
+  if (status.value) {
+    router.push({ name: 'Dashboard' })
   }
   status.value
 })
@@ -43,10 +42,9 @@ const v$ = useVuelidate(rules, { loginForm })
 async function login() {
   v$.value.$touch()
   if (!v$.value.$error) {
-     await userStore.login(loginForm)
+    await userStore.login(loginForm)
   }
 }
-
 </script>
 
 <template>
@@ -58,7 +56,7 @@ async function login() {
       >
         <div>
           <div class="my-10 text-center">
-            <router-link to='/' class="text-black logo text-4xl">Добро пожаловать</router-link>
+            <router-link to="/" class="text-black logo text-4xl">Добро пожаловать</router-link>
             <p class="py-4 text-gray-400">Пожалуйста, введите логин и пароль</p>
           </div>
           <div class="w-full mt-10 px-4 sm:px-8">
@@ -110,8 +108,4 @@ async function login() {
   </main>
 </template>
 
-<style scoped>
-
-</style>
-
-
+<style scoped></style>

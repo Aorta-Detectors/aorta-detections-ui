@@ -1,10 +1,8 @@
 import axios, { AxiosError } from 'axios'
 import type { AxiosRequestConfig } from 'axios'
-const api = (
-  dispatch: TAppDispatch | null = null,
-  logout: AsyncThunk<void, void, {}> | null = null,
-  refresh: AsyncThunk<void, void, {}> | null = null
-) => {
+import SecurityRequests from '@/services/security/requests'
+
+const api = () => {
   const axiosConfig = {
     baseURL: import.meta.env.VITE_BASE_URL,
     withCredentials: true
@@ -21,27 +19,28 @@ const api = (
   }
 
   const refreshAndRetry = async (error: AxiosError<AxiosRequestConfig>) => {
-    if (!dispatch || !refresh || !logout) return
-    const originalRequest: AxiosRequestConfig & { _isRetry?: boolean } = error?.config
-    if (
-      error &&
-      error.response &&
-      error.response.status === 401 &&
-      originalRequest &&
-      !originalRequest._isRetry
-    ) {
+    const originalRequest: AxiosRequestConfig & { _isRetry?: boolean } = error?.config;
+    if(error && error.response && error.response.status === 401 && originalRequest && !originalRequest._isRetry ){
       originalRequest._isRetry = true
       try {
-        await dispatch(refresh())
-        return api.request(originalRequest)
-      } catch (e) {
-        dispatch(logout())
+        const {status, data} = await SecurityRequests.refreshToken()
+        if(status === 200){
+          // TODO: Update user infos
+          localStorage.setItem(
+            'ad-token',
+            JSON.stringify({
+              access_token: data.access_token,
+              refresh_token: data.refresh_token
+            })
+          )
+        }
+
+      }catch (e) {
         console.error('Вы не авторизованы!') // TODO: add toast modal
+        //await SecurityRequests.logout()
       }
     }
-    throw error
   }
-
   const api = axios.create(axiosConfig)
 
   api.interceptors.request.use(setHeader)

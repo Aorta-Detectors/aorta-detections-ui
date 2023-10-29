@@ -35,14 +35,17 @@ export const useUserStore = defineStore('userStore', {
     async login(payload: TUserLoginRequest) {
       try {
         const t = await SecurityRequests.login(payload)
-        const { data } = t
-        localStorage.setItem(
-          'ad-token',
-          JSON.stringify({
-            access_token: data.access_token,
-            refresh_token: data.refresh_token
-          })
-        )
+        const { data, status } = t
+        if(status === 200){
+          localStorage.setItem(
+            'ad-token',
+            JSON.stringify({
+              access_token: data.access_token,
+              refresh_token: data.refresh_token
+            })
+          )
+        }
+
         this.status.loggedIn = true
 
         await router.push({ name: 'Dashboard' })
@@ -56,8 +59,11 @@ export const useUserStore = defineStore('userStore', {
 
     async getMe() {
       try {
-        const { data } = await SecurityRequests.getMe()
-        this.user = data
+        const { data, status } = await SecurityRequests.getMe()
+        if(status === 200 && data !== undefined ){
+          this.user = data
+
+        }
       } catch (e) {
         const errorMessage = handleError(e)
         console.error(errorMessage)
