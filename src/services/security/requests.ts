@@ -2,8 +2,7 @@ import commonApi from '@/http/commonApi'
 import type {
   TUser,
   TUserLoginRequest,
-  TUserLoginResponse,
-  TUserRegistrationRequest
+  TUserLoginResponse, TUserRegisterForm,
 } from '@/services/security/types'
 import api from '@/http'
 
@@ -14,7 +13,7 @@ export default class SecurityRequests {
     return commonApi().post<TUserLoginResponse>(`${authBasePath}/login`, payloadParams)
   }
 
-  static async registration(payloadParams: TUserRegistrationRequest) {
+  static async registration(payloadParams: TUserRegisterForm) {
     return commonApi().post<TUser>(`${authBasePath}/register`, payloadParams)
   }
 

@@ -9,12 +9,15 @@ export type TUserRegistrationRequest = {
   username: string
 }
 
+export type TUserRegisterForm = Omit<TUser, 'user_id'>
+
 export type TUser = {
   user_id: number
   first_name: string
   second_name: string
   email: string
   role: string
+  password?: string
 }
 
 export type TUserLoginRequest = {

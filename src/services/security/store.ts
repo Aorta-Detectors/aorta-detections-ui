@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
-import type { TUser, TUserLoginRequest } from '@/services/security/types'
+import type { TUser, TUserLoginRequest, TUserRegisterForm } from '@/services/security/types'
 import { handleError } from '@/utils/handleError'
 import SecurityRequests from '@/services/security/requests'
 import router from '@/router'
 
-export type TUserState = { user: TUser; status: { loggedIn: boolean } }
+export type TUserState = { user: TUser; status: { loggedIn: boolean }, loading: boolean }
 const userTokens = JSON.parse(localStorage.getItem('ad-token'))
 const initialUserLoginState: { status: { loggedIn: boolean } } =
   userTokens !== null
@@ -15,10 +15,11 @@ const initialUserLoginState: { status: { loggedIn: boolean } } =
         status: { loggedIn: false }
       }
 
-export const useUserStore = defineStore('userStore', {
+export const useUserStore = defineStore('users', {
   state: (): TUserState => ({
     ...initialUserLoginState,
-    user: {}
+    user: {},
+    loading: false
   }),
 
   getters: {
@@ -28,6 +29,10 @@ export const useUserStore = defineStore('userStore', {
 
     userInfo(state: TUserState) {
       return state.user
+    },
+
+    isLoading(state: TUserState) {
+      return state.loading
     }
   },
 
@@ -36,7 +41,7 @@ export const useUserStore = defineStore('userStore', {
       try {
         const t = await SecurityRequests.login(payload)
         const { data, status } = t
-        if(status === 200){
+        if (status === 200) {
           localStorage.setItem(
             'ad-token',
             JSON.stringify({
@@ -57,12 +62,17 @@ export const useUserStore = defineStore('userStore', {
       }
     },
 
+
+    async registerUser(payload: TUserLoginRequest) {
+      console.log(payload)
+
+    },
+
     async getMe() {
       try {
         const { data, status } = await SecurityRequests.getMe()
-        if(status === 200 && data !== undefined ){
+        if (status === 200 && data !== undefined) {
           this.user = data
-
         }
       } catch (e) {
         const errorMessage = handleError(e)

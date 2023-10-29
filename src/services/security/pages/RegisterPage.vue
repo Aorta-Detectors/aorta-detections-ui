@@ -1,74 +1,83 @@
-<script>
+<script lang="ts" setup>
 import useVuelidate from '@vuelidate/core'
 import { required, helpers, minLength, email } from '@vuelidate/validators'
 import ErrorComponent from '../../../components/common/ErrorComponent.vue'
 import { validPassword } from '../utils/securityUtils'
-import LogoComponent from '@/components/common/LogoComponent.vue'
-import { mapState } from 'pinia'
+import { storeToRefs } from 'pinia'
 import { useUserStore } from '@/services/security/store'
-export default {
-  name: 'RegisterPage',
-  components: { LogoComponent, ErrorComponent },
+import type { TUserRegisterForm } from '@/services/security/types/index'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import SecurityRequests from '@/services/security/requests'
+import { handleError } from '@/utils/handleError'
+import Notification from '@/utils/Notification'
 
-  data() {
-    return {
-      v$: useVuelidate(),
+const userStore = useUserStore()
+const router = useRouter()
 
-      registerForm: {
-        first_name: null,
-        last_name: null,
-        role: null,
-        password: null
-      }
+const { loggedInStatus } = storeToRefs(userStore)
+const isLoading = ref(false)
+
+const registerForm = reactive<TUserRegisterForm>({
+  first_name: null,
+  second_name: null,
+  email: null,
+  role: null,
+  password: null
+})
+
+const rules = computed(() => ({
+  registerForm: {
+    first_name: {
+      required: helpers.withMessage('Имя - это обязательное поле', required),
+      minLength: helpers.withMessage('Длина не менее 2 символов', minLength(2))
+    },
+    second_name: {
+      required: helpers.withMessage('Фамилия - это обязательное поле', required),
+      minLength: helpers.withMessage('Длина не менее 2 символов', minLength(2))
+    },
+    role: {
+      required: helpers.withMessage('Роль - это обязательное поле', required)
+    },
+    email: {
+      required: helpers.withMessage('Email - это обязательное поле', required),
+      email: helpers.withMessage('Некорректный email', email)
+    },
+    password: {
+      required: helpers.withMessage('Пароль - это обязательное поле', required),
+      name_validation: {
+        $validator: validPassword,
+        $message:
+          'Как минимум один специальный символ, например: ! @ # ?, одна цифра(0-9) и отсутствие пробелов'
+      },
+      minLength: helpers.withMessage('Длина не менее 5 символов', minLength(5))
     }
-  },
+  }
+}))
 
-  created() {
-    if(this.loggedInStatus){
-      this.$router.push({name: 'Dashboard'})
-    }
-  },
+const v$ = useVuelidate(rules, { registerForm })
 
-  computed: {
-    ...mapState(useUserStore, ['loggedInStatus']),
-  },
+onMounted(() => {
+  if (loggedInStatus.value) {
+    router.push({ name: 'Dashboard' })
+  }
+})
 
-  methods: {
-    handleRegister() {
-      this.v$.registerForm.$touch()
-      if (!this.v$.registerForm.$error) {
-      }
-    }
-  },
+async function handleRegister() {
+  v$.value.$touch()
 
-  validations() {
-    return {
-      registerForm: {
-        first_name: {
-          required: helpers.withMessage('Имя - это обязательное поле', required),
-          minLength: minLength(2)
-        },
-        last_name: {
-          required: helpers.withMessage('Фамилия - это обязательное поле', required),
-          minLength: minLength(2)
-        },
-        role: {
-          required: helpers.withMessage('Роль - это обязательное поле', required)
-        },
-        email: {
-          required: helpers.withMessage('Email - это обязательное поле', required),
-          email: helpers.withMessage('Некорректный email', email)
-        },
-        password: {
-          required: helpers.withMessage('Пароль - это обязательное поле', required),
-          name_validation: {
-            $validator: validPassword,
-            $message:
-              'Как минимум один специальный символ, например: ! @ # ?, одна цифра(0-9) и отсутствие пробелов'
-          },
-          minLength: helpers.withMessage('Длина не менее 5 символов', minLength(5))
-        }
-      }
+  if (!v$.value.$error) {
+    isLoading.value = true
+    try {
+      const t = await Notification.promise(SecurityRequests.registration(registerForm), true)
+      const { data, status } = t
+      await router.push({ name: 'LoginPage' })
+    } catch (e) {
+      const errorMessage = handleError(e)
+      console.error(errorMessage)
+      throw e
+    } finally {
+      isLoading.value = false
     }
   }
 }
@@ -83,7 +92,7 @@ export default {
       >
         <div>
           <div class="text-center">
-            <router-link to="/" class="text-black logo text-4xl">Регистрация  </router-link>
+            <router-link to="/" class="text-black logo text-4xl">Регистрация </router-link>
             <p class="py-4 text-gray-400">Пожалуйста, заполните следующие поля</p>
           </div>
           <div class="w-full px-4 sm:px-8">
@@ -107,17 +116,17 @@ export default {
                   <ErrorComponent :errors="v$.registerForm.first_name.$errors" />
                 </div>
                 <div>
-                  <label for="last_name" class="block mb-2 text-sm font-medium text-gray-900"
+                  <label for="second_name" class="block mb-2 text-sm font-medium text-gray-900"
                     >Фамилия</label
                   >
                   <input
-                    v-model="v$.registerForm.last_name.$model"
+                    v-model="v$.registerForm.second_name.$model"
                     type="text"
-                    id="last_name"
+                    id="second_name"
                     class="ad-input"
                     placeholder=""
                   />
-                  <ErrorComponent :errors="v$.registerForm.last_name.$errors" />
+                  <ErrorComponent :errors="v$.registerForm.second_name.$errors" />
                 </div>
                 <div>
                   <label for="role" class="block mb-2 text-sm font-medium text-gray-900"
@@ -162,7 +171,9 @@ export default {
                 </div>
               </div>
               <div class="">
-                <button type="submit" class="ad-primary-btn w-full">Зарегестрироваться</button>
+                <button type="submit" class="ad-primary-btn w-full">
+                  {{ isLoading ? 'Обрабатывается...' : 'Зарегистрироваться' }}
+                </button>
               </div>
               <div class="text-sm font-light text-gray-500 mt-4 justify-center space-x-4 flex">
                 <p>Уже есть аккаунт?</p>
