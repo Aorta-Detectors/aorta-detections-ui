@@ -3,9 +3,7 @@
 </script>
 
 <template>
-    <div>Add patient</div>
+  <div class="h-full w-full ">
+    <slot/>
+  </div>
 </template>
-
-<style scoped>
-
-</style>

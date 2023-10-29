@@ -3,7 +3,7 @@
 </script>
 
 <template>
-    <div>Add patient</div>
+    <div>История пациентов</div>
 </template>
 
 <style scoped>

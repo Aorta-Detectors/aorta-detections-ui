@@ -1,3 +1,3 @@
 <template>
-  <h1 class="uppercase  logo">Aorta detection</h1>
+  <router-link :to="{path: '/'}" class="uppercase logo">Детекция аорты</router-link>
 </template>

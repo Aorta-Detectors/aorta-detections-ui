@@ -1,49 +1,48 @@
-<script>
+<script setup>
 import useVuelidate from '@vuelidate/core'
-import { required, helpers } from '@vuelidate/validators'
+import { required, helpers, email } from '@vuelidate/validators'
 import ErrorComponent from '../../../components/common/ErrorComponent.vue'
-import LogoComponent from '@/components/common/LogoComponent.vue'
-export default {
-  name: 'LoginPage',
-  components: { LogoComponent, ErrorComponent },
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useUserStore } from '@/services/security/store'
+import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
 
-  data() {
-    return {
-      v$: useVuelidate(),
+const router = useRouter()
+const userStore = useUserStore()
+const { status } = storeToRefs(userStore)
 
-      loginForm: {
-        email: '',
-        password: ''
-      }
+const loading = ref(false)
+
+const loginForm = reactive({
+  email: '',
+  password: ''
+})
+
+const rules = computed(() => ({
+  loginForm: {
+    email: {
+      required: helpers.withMessage('Email - это обязательное поле', required),
+      email: helpers.withMessage('Неверный email ', email)
+    },
+    password: {
+      required: helpers.withMessage('Пароль - это обязательное поле', required)
     }
-  },
+  }
+}))
 
-  computed: {
-    loading() {
-      return false
-    }
-  },
+onMounted(() => {
+  if (status.value) {
+    router.push({ name: 'Dashboard' })
+  }
+  status.value
+})
 
-  methods: {
-    login() {
-      this.v$.loginForm.$touch()
-      if (!this.v$.loginForm.$error) {
-        //TODO: submit form
-      }
-    }
-  },
+const v$ = useVuelidate(rules, { loginForm })
 
-  validations() {
-    return {
-      loginForm: {
-        email: {
-          required: helpers.withMessage('Email is required', required)
-        },
-        password: {
-          required: helpers.withMessage('Password is required', required)
-        }
-      }
-    }
+async function login() {
+  v$.value.$touch()
+  if (!v$.value.$error) {
+    await userStore.login(loginForm)
   }
 }
 </script>
@@ -57,8 +56,8 @@ export default {
       >
         <div>
           <div class="my-10 text-center">
-            <h1 class="text-black logo text-4xl">Welcome back</h1>
-            <p class="py-4 text-gray-400">Please enter your credentials</p>
+            <router-link to="/" class="text-black logo text-4xl">Добро пожаловать</router-link>
+            <p class="py-4 text-gray-400">Пожалуйста, введите логин и пароль</p>
           </div>
           <div class="w-full mt-10 px-4 sm:px-8">
             <form @submit.prevent="login" class="space-y-4 md:space-y-6">
@@ -77,7 +76,7 @@ export default {
               </div>
               <div>
                 <label for="password" class="block mb-2 text-sm font-medium text-gray-900"
-                  >Password</label
+                  >Пароль</label
                 >
                 <input
                   v-model="v$.loginForm.password.$model"
@@ -90,18 +89,18 @@ export default {
               </div>
               <div class="">
                 <button type="submit" class="ad-primary-btn w-full">
-                  {{ loading ? 'Processing...' : 'Login' }}
+                  {{ loading ? 'Загрузка...' : 'Войти' }}
                 </button>
               </div>
             </form>
           </div>
         </div>
         <div class="text-sm font-light text-gray-500 mt-4 justify-center space-x-4 flex">
-          <p>Don't have an account?</p>
+          <p>Нет аккаунта?</p>
           <router-link
             :to="{ name: 'RegisterPage' }"
             class="font-medium text-primary-600 hover:underline"
-            >Sign Up</router-link
+            >Зарегестрироваться</router-link
           >
         </div>
       </div>
@@ -109,8 +108,4 @@ export default {
   </main>
 </template>
 
-<style scoped>
-
-</style>
-
-
+<style scoped></style>

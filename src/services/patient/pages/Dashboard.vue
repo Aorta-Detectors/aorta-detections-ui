@@ -3,7 +3,9 @@
 </script>
 
 <template>
-    <div>Add patient</div>
+  <div>
+    Dashboard
+  </div>
 </template>
 
 <style scoped>
