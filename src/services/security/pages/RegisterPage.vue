@@ -37,11 +37,11 @@ export default {
       registerForm: {
         first_name: {
           required: helpers.withMessage('Имя - это обязательное поле', required),
-          minLength: minLength(2)
+          minLength: helpers.withMessage('Минимальная длина имени должна быть 2 символа.', minLength(2))
         },
         last_name: {
           required: helpers.withMessage('Фамилия - это обязательное поле', required),
-          minLength: minLength(2)
+          minLength: helpers.withMessage('Минимальная длина имени должна быть 2 символа.', minLength(2))
         },
         role: {
           required: helpers.withMessage('Роль - это обязательное поле', required)
