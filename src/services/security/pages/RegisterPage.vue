@@ -26,6 +26,7 @@ const registerForm = reactive<TUserRegisterForm>({
   password: null
 })
 
+
 const rules = computed(() => ({
   registerForm: {
     first_name: {
