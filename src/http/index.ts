@@ -4,7 +4,7 @@ import router from '@/router'
 import TokenService from '@/services/token'
 import Notification from '@/utils/Notification'
 
-const api = axios.create({
+export const api = axios.create({
   timeout: 5000,
   baseURL: import.meta.env.VITE_BASE_URL,
   withCredentials: true
@@ -12,10 +12,10 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    let tokens = TokenService.getLocalAccessToken()
+    let access_token = TokenService.getLocalAccessToken()
 
-    if (tokens !== null) {
-      config.headers.Authorization = `Bearer ${tokens?.access_token}`
+    if (access_token) {
+      config.headers.Authorization = `Bearer ${access_token}`
     }
 
     return config
@@ -33,13 +33,15 @@ api.interceptors.response.use(
     const originalConfig :AxiosRequestConfig & { _isRetry?: boolean } =  err?.config
 
     if (originalConfig.url !== '/api/auth/login' && err.response) {
+
       if (err.response.status === 401 && !originalConfig._isRetry) {
         originalConfig._isRetry = true
 
         try {
-          const response = await SecurityRequests.refreshToken()
+          const { data, status } = await SecurityRequests.refreshToken()
 
-          TokenService.updateLocalAccessToken(response.access_token)
+          TokenService.updateLocalAccessToken(data.access_token)
+          TokenService.updateLocalRefreshToken(data.refresh_token)
 
           return api.request(originalConfig)
         } catch (_error) {
@@ -47,7 +49,6 @@ api.interceptors.response.use(
           Notification.error('Вы не авторизованы!');
           await SecurityRequests.logout()
           TokenService.removeUserTokens()
-
 
           return Promise.reject(_error)
         }
