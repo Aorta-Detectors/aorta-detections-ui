@@ -4,6 +4,7 @@ import MainPatientPage from '@/services/patient/pages/MainPatientPage.vue'
 import PatientsHistory from '@/services/patient/pages/PatientsHistory.vue'
 import PatientList from '@/services/patient/pages/PatientList.vue'
 import PersonalAccountPage from '@/services/patient/pages/PersonalAccountPage.vue'
+import PatientNavBar from '@/services/patient/parials/PatientNavBar.vue'
 
 export const PatientRoutes = [
   {
@@ -20,7 +21,7 @@ export const PatientRoutes = [
         path: 'dashboard',
         alias: '',
         name: 'Dashboard',
-        components: { default: Dashboard },
+        components: { default: Dashboard, patientHeader: PatientNavBar},
         meta: {
           PageTitle: 'Dashboard'
         }
@@ -28,7 +29,7 @@ export const PatientRoutes = [
       {
         path: 'add',
         name: 'AddPatient',
-        components: { default: AddPatient },
+        components: { default: AddPatient},
         meta: {
           PageTitle: 'Добавление пациента'
         }
@@ -36,7 +37,7 @@ export const PatientRoutes = [
       {
         path: 'list',
         name: 'PatientList',
-        components: { default: PatientList },
+        components: { default: PatientList, patientHeader: PatientNavBar },
         meta: {
           PageTitle: 'Список пациентов'
         }
@@ -44,7 +45,7 @@ export const PatientRoutes = [
       {
         path: 'history',
         name: 'PatientsHistory',
-        components: { default: PatientsHistory },
+        components: { default: PatientsHistory, patientHeader: PatientNavBar },
         meta: {
           PageTitle: 'История работы'
         }

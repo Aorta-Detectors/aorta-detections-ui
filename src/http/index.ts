@@ -1,63 +1,63 @@
-import axios, { AxiosError } from 'axios'
-import type { AxiosRequestConfig } from 'axios'
+import axios, { AxiosError, type AxiosRequestConfig } from 'axios'
 import SecurityRequests from '@/services/security/requests'
 import router from '@/router'
+import TokenService from '@/services/token'
+import Notification from '@/utils/Notification'
 
-const api = () => {
-  const axiosConfig = {
-    baseURL: import.meta.env.VITE_BASE_URL,
-    withCredentials: true
-  }
+export const api = axios.create({
+  timeout: 5000,
+  baseURL: import.meta.env.VITE_BASE_URL,
+  withCredentials: true
+})
 
-  const setHeader = (config: AxiosRequestConfig) => {
-    let tokens = JSON.parse(localStorage.getItem('ad-token'))
+api.interceptors.request.use(
+  (config) => {
+    let access_token = TokenService.getLocalAccessToken()
 
-    if (tokens !== null) {
-      config.headers.Authorization = `Bearer ${tokens?.access_token}`
+    if (access_token) {
+      config.headers.Authorization = `Bearer ${access_token}`
     }
 
     return config
+  },
+  (error) => {
+    return Promise.reject(error)
   }
+)
 
-  const refreshAndRetry = async (error: AxiosError<AxiosRequestConfig>) => {
-    const originalRequest: AxiosRequestConfig & { _isRetry?: boolean } = error?.config
-    if (
-      error &&
-      error.response &&
-      error.response.status === 401 &&
-      originalRequest &&
-      !originalRequest._isRetry
-    ) {
-      originalRequest._isRetry = true
-      try {
-        const { status, data } = await SecurityRequests.refreshToken()
-        if (status === 200) {
-          localStorage.setItem(
-            'ad-token',
-            JSON.stringify({
-              access_token: data.access_token,
-              refresh_token: data.refresh_token
-            })
-          )
+api.interceptors.response.use(
+  (res) => {
+    return res
+  },
+  async (err) => {
+    const originalConfig :AxiosRequestConfig & { _isRetry?: boolean } =  err?.config
+
+    if (originalConfig.url !== '/api/auth/login' && err.response) {
+
+      if (err.response.status === 401 && !originalConfig._isRetry) {
+        originalConfig._isRetry = true
+
+        try {
+          const { data, status } = await SecurityRequests.refreshToken()
+
+          TokenService.updateLocalAccessToken(data.access_token)
+          TokenService.updateLocalRefreshToken(data.refresh_token)
+
+          return api.request(originalConfig)
+        } catch (_error) {
+          await router.push('/login')
+          Notification.error('Вы не авторизованы!');
+          await SecurityRequests.logout()
+          TokenService.removeUserTokens()
+
+          return Promise.reject(_error)
         }
-
-        originalRequest.headers['Authorization'] = `Bearer ${data.access_toke}`
-        return axiosInstance(originalRequest)
-      } catch (e) {
-        console.error('Вы не авторизованы!') // TODO: add toast modal
-        await router.push('/login')
-      } finally {
-        originalRequest._isRetry = false
       }
     }
 
-    return Promise.reject(error)
+    return Promise.reject(err)
   }
-  const api = axios.create(axiosConfig)
-
-  api.interceptors.request.use(setHeader)
-  api.interceptors.response.use((config) => config, refreshAndRetry)
-  return api
-}
+)
 
 export default api
+

@@ -8,7 +8,7 @@ import PatientNavBar from '@/services/patient/parials/PatientNavBar.vue'
   <div class="h-screen w-full flex overflow-hidden">
     <AsideNav/>
     <div class="flex-1 overflow-y-auto h-full">
-      <PatientNavBar/>
+      <router-view name='patientHeader' />
 
       <main class="px-4 py-6">
         <router-view />
