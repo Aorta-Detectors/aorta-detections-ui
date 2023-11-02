@@ -100,7 +100,7 @@ async function login() {
           <router-link
             :to="{ name: 'RegisterPage' }"
             class="font-medium text-primary-600 hover:underline"
-            >Зарегестрироваться</router-link
+            >Зарегистрироваться</router-link
           >
         </div>
       </div>
