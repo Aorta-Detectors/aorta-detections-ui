@@ -586,6 +586,14 @@
   dependencies:
     vue-demi "^0.13.11"
 
+"@vuepic/vue-datepicker@^7.2.1":
+  version "7.2.1"
+  resolved "https://registry.yarnpkg.com/@vuepic/vue-datepicker/-/vue-datepicker-7.2.1.tgz#eb52f1dd8d82197290efa34ecf48bf5674a552ad"
+  integrity sha512-K/+HSmyPvtpjbgUQm9ebnYky9fP4j/3cNKo4DfDBnsq6I2IK3N1OAtTW+YK7TTfu+Xww204CWPpr9hNqfrAHWw==
+  dependencies:
+    date-fns "^2.30.0"
+    date-fns-tz "^2.0.0"
+
 "@vueuse/core@^10.5.0":
   version "10.5.0"
   resolved "https://registry.npmjs.org/@vueuse/core/-/core-10.5.0.tgz"
@@ -902,6 +910,11 @@ csstype@^3.1.1:
   version "3.1.2"
   resolved "https://registry.npmjs.org/csstype/-/csstype-3.1.2.tgz"
   integrity sha512-I7K1Uu0MBPzaFKg4nI5Q7Vs2t+3gWWW648spaF+Rg7pI9ds18Ugn+lvg4SHczUdKlHI5LWBXyqfS8+DufyBsgQ==
+
+date-fns-tz@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/date-fns-tz/-/date-fns-tz-2.0.0.tgz#1b14c386cb8bc16fc56fe333d4fc34ae1d1099d5"
+  integrity sha512-OAtcLdB9vxSXTWHdT8b398ARImVwQMyjfYGkKD2zaGpHseG2UPHbHjXELReErZFxWdSLph3c2zOaaTyHfOhERQ==
 
 date-fns@^2.30.0:
   version "2.30.0"

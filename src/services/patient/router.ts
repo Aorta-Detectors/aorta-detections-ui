@@ -1,10 +1,11 @@
-import AddPatient from '@/services/patient/pages/AddPatient.vue'
 import Dashboard from '@/services/patient/pages/Dashboard.vue'
 import MainPatientPage from '@/services/patient/pages/MainPatientPage.vue'
-import PatientsHistory from '@/services/patient/pages/PatientsHistory.vue'
 import PatientList from '@/services/patient/pages/PatientList.vue'
-import PersonalAccountPage from '@/services/patient/pages/PersonalAccountPage.vue'
+import PersonalAccountPage from '@/services/security/pages/PersonalAccountPage.vue'
 import PatientNavBar from '@/services/patient/parials/PatientNavBar.vue'
+import AddAppointment from '@/services/patient/pages/AddAppointment.vue'
+import AppointmentsHistory from '@/services/patient/pages/AppointmentsHistory.vue'
+import AppointmentHistory from '@/services/patient/pages/AppointmentHistory.vue'
 
 export const PatientRoutes = [
   {
@@ -28,10 +29,10 @@ export const PatientRoutes = [
       },
       {
         path: 'add',
-        name: 'AddPatient',
-        components: { default: AddPatient},
+        name: 'AddAppointment',
+        components: { default: AddAppointment},
         meta: {
-          PageTitle: 'Добавление пациента'
+          PageTitle: 'Оформление нового приема'
         }
       },
       {
@@ -44,10 +45,18 @@ export const PatientRoutes = [
       },
       {
         path: 'history',
-        name: 'PatientsHistory',
-        components: { default: PatientsHistory, patientHeader: PatientNavBar },
+        name: 'AppointmentsHistory',
+        components: { default: AppointmentsHistory, patientHeader: PatientNavBar },
         meta: {
-          PageTitle: 'История работы'
+          PageTitle: 'История приема'
+        }
+      },
+      {
+        path: 'history/:id',
+        name: 'AppointmentHistory',
+        components: { default: AppointmentHistory, patientHeader: PatientNavBar },
+        meta: {
+          PageTitle: 'История приема'
         }
       },
       {

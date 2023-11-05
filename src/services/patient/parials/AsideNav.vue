@@ -26,9 +26,9 @@ onBeforeMount(async () => {
           <HeroIcon icon-type="outline" icon-name="HomeIcon" />
           <span>Dashboard</span>
         </router-link>
-        <router-link :to="{ name: 'PatientsHistory' }" class="btn" active-class="active-class-nav">
+        <router-link :to="{ name: 'AppointmentsHistory' }" class="btn" active-class="active-class-nav">
           <HeroIcon icon-type="outline" icon-name="ClockIcon" />
-          <span>История работы</span>
+          <span>История приема</span>
         </router-link>
 
         <router-link :to="{ name: 'PatientList' }" class="btn" active-class="active-class-nav">

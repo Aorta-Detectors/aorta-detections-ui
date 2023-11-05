@@ -7,7 +7,7 @@
         </router-link>
         <div>
           <div  class="relative inline-block text-left ml-2">
-            <router-link v-if='!status' :to="{ name: 'LoginPage' }" class="hover:text-theme-primary0"
+            <router-link v-if='!status.loggedIn' :to="{ name: 'LoginPage' }" class="hover:text-theme-primary0"
               >Войти</router-link
             >
             <router-link v-else :to="{name: 'Dashboard'}">Dashboard</router-link>

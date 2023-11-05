@@ -4,6 +4,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        "theme-base-bg": "var(--color-bg)",
         "theme-primary0": "var(--primary0)",
         "theme-primary10": "var(--primary10)",
         "theme-primary20": "var(--primary20)",
