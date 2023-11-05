@@ -1,13 +1,13 @@
 <script>
 import useVuelidate from '@vuelidate/core'
-import { required, helpers, numeric, email } from '@vuelidate/validators'
+import { required, helpers, numeric  } from '@vuelidate/validators'
 import ErrorComponent from '../../../components/common/ErrorComponent.vue'
 import ResizableTextarea from '../../../components/ResizableTextarea.vue'
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import PageHeaderComponent from '@/components/common/PageHeaderComponent.vue'
 export default {
-  name: 'AddPatient',
+  name: 'AddAppointment',
   components: { PageHeaderComponent, ErrorComponent, ResizableTextarea, VueDatePicker },
 
   data() {
@@ -48,7 +48,7 @@ export default {
       console.log(date)
     },
 
-    handleAddPatient() {
+    handleAddAppointment() {
       this.v$.patientForm.$touch()
       if (!this.v$.patientForm.$error) {
       }
@@ -80,8 +80,8 @@ export default {
       <p class="py-4 text-gray-400">Пожалуйста, заполните следующие поля</p>
     </div>
 
-    <div class="w-full">
-      <form @submit.prevent="handleAddPatient" class="flex flex-col space-y-8" autocomplete="off">
+    <div class="w-full p-6 bg-white rounded-2xl">
+      <form @submit.prevent="handleAddAppointment" class="flex flex-col space-y-8" autocomplete="off">
         <div class="grid grid-cols-1 lg:grid-cols-2  gap-4">
           <!-- Полис -->
           <div>
@@ -249,7 +249,7 @@ export default {
           <!-- Данные по ЭхоКТ -->
           <ResizableTextarea id="EKG_data" label="Данные по ЭхоКТ:" v-model="patientForm.EKG_data" />
           <div class="flex justify-end items-center">
-            <router-link :to="{ name: 'PatientsHistory' }" class="mr-4">Отменить</router-link>
+            <router-link :to="{ name: 'AppointmentsHistory' }" class="mr-4">Отменить</router-link>
             <button type="submit" class="ad-primary-btn">Добавить</button>
           </div>
         </div>
