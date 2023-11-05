@@ -1,6 +1,6 @@
 :root {
   --md-source: #297982;
-  --color-bg: #fafafa;
+  --color-bg: rgba(236, 235, 235, 0.77);
   /* primary */
   --primary0: #297982;
   --primary10: #2d8d99;

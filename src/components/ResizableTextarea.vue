@@ -3,10 +3,11 @@
         <label :for="id" class="block mb-2 text-sm font-medium text-gray-900">{{ label }}</label>
         <textarea
             :id="id"
-            :v-model="model"
+            :value="modelValue"
             @input="resizeTextarea"
             ref="textarea"
             class="ad-input"
+            rows='6'
         ></textarea>
     </div>
   </template>
@@ -16,17 +17,21 @@
     props: {
       id: String,
       label: String,
-      model: String,
+      modelValue: String,
     },
     data() {
       return {
         text: '',
       };
     },
+
+    emits: ["update:modelValue"],
+
     methods: {
-      resizeTextarea() {
+      resizeTextarea(event) {
         this.$refs.textarea.style.height = 'auto';
         this.$refs.textarea.style.height = this.$refs.textarea.scrollHeight + 'px';
+        this.$emit('update:modelValue',  event.target.value)
       },
     },
   };

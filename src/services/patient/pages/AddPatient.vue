@@ -3,9 +3,12 @@ import useVuelidate from '@vuelidate/core'
 import { required, helpers, numeric, email } from '@vuelidate/validators'
 import ErrorComponent from '../../../components/common/ErrorComponent.vue'
 import ResizableTextarea from '../../../components/ResizableTextarea.vue'
+import VueDatePicker from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
+import PageHeaderComponent from '@/components/common/PageHeaderComponent.vue'
 export default {
   name: 'AddPatient',
-  components: { ErrorComponent, ResizableTextarea },
+  components: { PageHeaderComponent, ErrorComponent, ResizableTextarea, VueDatePicker },
 
   data() {
     return {
@@ -36,7 +39,15 @@ export default {
     }
   },
 
+  computed: {
+
+  },
+
   methods: {
+    handleDateSelection(date) {
+      console.log(date)
+    },
+
     handleAddPatient() {
       this.v$.patientForm.$touch()
       if (!this.v$.patientForm.$error) {
@@ -63,46 +74,46 @@ export default {
 </script>
 
 <template>
-  <div class=" ">
-    <div>
-      <div class="">
-        <h1 class="text-black logo text-4xl">Добавить нового пациента</h1>
-        <p class="py-4 text-gray-400">Пожалуйста, заполните следующие поля</p>
-      </div>
+  <div>
+    <div class="">
+      <PageHeaderComponent title="Оформление нового приема" />
+      <p class="py-4 text-gray-400">Пожалуйста, заполните следующие поля</p>
+    </div>
 
-      <div class="w-full">
-        <form @submit.prevent="handleAddPatient" class="flex flex-col space-y-8" autocomplete="off">
-          <div class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
-            <!-- Полис -->
-            <div>
-              <label for="OMC" class="block mb-2 text-sm font-medium text-gray-900"
-                >Номер полиса ОМС:</label
-              >
-              <input
-                v-model="v$.patientForm.OMC.$model"
-                type="text"
-                id="OMC"
-                class="ad-input"
-                placeholder=""
-              />
-              <ErrorComponent :errors="v$.patientForm.OMC.$errors" />
-            </div>
+    <div class="w-full">
+      <form @submit.prevent="handleAddPatient" class="flex flex-col space-y-8" autocomplete="off">
+        <div class="grid grid-cols-1 lg:grid-cols-2  gap-4">
+          <!-- Полис -->
+          <div>
+            <label for="OMC" class="block mb-2 text-sm font-medium text-gray-900"
+              >Номер полиса ОМС:</label
+            >
+            <input
+              v-model="v$.patientForm.OMC.$model"
+              type="text"
+              id="OMC"
+              class="ad-input"
+              placeholder=""
+            />
+            <ErrorComponent :errors="v$.patientForm.OMC.$errors" />
+          </div>
 
-            <!-- ФИО -->
-            <div>
-              <label for="FIO" class="block mb-2 text-sm font-medium text-gray-900"
-                >Фамилия Имя Отчество:</label
-              >
-              <input
-                v-model="v$.patientForm.FIO.$model"
-                type="text"
-                id="FIO"
-                class="ad-input"
-                placeholder=""
-              />
-              <ErrorComponent :errors="v$.patientForm.FIO.$errors" />
-            </div>
+          <!-- ФИО -->
+          <div>
+            <label for="FIO" class="block mb-2 text-sm font-medium text-gray-900"
+              >Фамилия Имя Отчество:</label
+            >
+            <input
+              v-model="v$.patientForm.FIO.$model"
+              type="text"
+              id="FIO"
+              class="ad-input"
+              placeholder=""
+            />
+            <ErrorComponent :errors="v$.patientForm.FIO.$errors" />
+          </div>
 
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
             <!-- Пол -->
             <div>
               <label for="sex" class="block mb-2 text-sm font-medium text-gray-900">Пол:</label>
@@ -110,19 +121,6 @@ export default {
                 <option value="male">Мужчина</option>
                 <option value="female">Женщина</option>
               </select>
-            </div>
-
-            <!-- Дата Рождения -->
-            <div>
-              <label for="birth_date" class="block mb-2 text-sm font-medium text-gray-900"
-                >Дата Рождения:</label
-              >
-              <input
-                v-model="patientForm.birth_date"
-                type="date"
-                id="birth_date"
-                class="ad-input"
-              />
             </div>
 
             <!-- Рост -->
@@ -155,7 +153,28 @@ export default {
                 step="0.1"
               />
             </div>
+          </div>
+          <!-- Дата Рождения -->
+          <div>
+            <label for="birth_date" class="block mb-2 text-sm font-medium text-gray-900"
+              >Дата Рождения:</label
+            >
+            <VueDatePicker
+              @update:model-value="handleDateSelection"
+              v-model="patientForm.birth_date"
+              locale="ru-Ru"
+              format="dd/MM/yyyy"
+              cancelText="Отменить"
+              selectText="Выбрать"
+              id="birth_date"
+              class="py-1.5"
+              text-input
+              :enable-time-picker="false"
+              :action-row="{ showNow: true }" now-button-label="Сегодня"
+            />
+          </div>
 
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
             <!-- Кровяное давление -->
             <div>
               <label for="blood_pressure" class="block mb-2 text-sm font-medium text-gray-900"
@@ -175,7 +194,7 @@ export default {
                 >Пульс:</label
               >
               <input
-                v-model="patientForm.height"
+                v-model="patientForm.pulse"
                 type="number"
                 id="height"
                 class="ad-input"
@@ -183,61 +202,59 @@ export default {
                 max="250"
               />
             </div>
-
-            <!-- Отечность -->
-            <div>
-              <label for="swelling" class="block mb-2 text-sm font-medium text-gray-900"
-                >Отечность:</label
-              >
-              <input v-model="patientForm.swelling" type="text" id="swelling" class="ad-input" />
-            </div>
-
-            <!-- Жалобы -->
-            <ResizableTextarea id="complaints" label="Жалобы:" model="patientForm.complaints" />
-
-            <!-- Диагноз -->
-            <ResizableTextarea id="diagnosis" label="Диагноз:" model="patientForm.diagnosis" />
-
-            <!-- Осложнения -->
-            <ResizableTextarea
-              id="complications"
-              label="Осложнения:"
-              model="patientForm.complications"
-            />
-
-            <!-- Сопуствующие заболевания -->
-            <ResizableTextarea
-              id="accompanying_illnesses"
-              label="Сопуствующие заболевания:"
-              model="patientForm.accompanying_illnesses"
-            />
-
-            <!-- Анамнез в течение жизни -->
-            <ResizableTextarea
-              id="anamnesis_life"
-              label="Анамнез в течение жизни:"
-              model="patientForm.anamnesis_life"
-            />
-
-            <!-- Анамнез в течение болезни -->
-            <ResizableTextarea
-              id="anamnesis_illness"
-              label="Анамнез в течение болезни:"
-              model="patientForm.anamnesis_illness"
-            />
-
-            <!-- Данные по ЭхоКТ -->
-            <ResizableTextarea
-              id="EKG_data"
-              label="Данные по ЭхоКТ:"
-              model="patientForm.EKG_data"
-            />
           </div>
-          <div class="">
-            <button type="submit" class="ad-primary-btn w-full">Добавить</button>
+
+          <!-- Отечность -->
+          <div>
+            <label for="swelling" class="block mb-2 text-sm font-medium text-gray-900"
+              >Отечность:</label
+            >
+            <input v-model="patientForm.swelling" type="text" id="swelling" class="ad-input" />
           </div>
-        </form>
-      </div>
+
+          <!-- Жалобы -->
+          <ResizableTextarea id="complaints" label="Жалобы:" v-model="patientForm.complaints" />
+
+          <!-- Диагноз -->
+          <ResizableTextarea id="diagnosis" label="Диагноз:" v-model="patientForm.diagnosis" />
+
+          <!-- Осложнения -->
+          <ResizableTextarea
+            id="complications"
+            label="Осложнения:"
+            v-model="patientForm.complications"
+          />
+
+          <!-- Сопуствующие заболевания -->
+          <ResizableTextarea
+            id="accompanying_illnesses"
+            label="Сопуствующие заболевания:"
+            v-model="patientForm.accompanying_illnesses"
+          />
+
+          <!-- Анамнез в течение жизни -->
+          <ResizableTextarea
+            id="anamnesis_life"
+            label="Анамнез в течение жизни:"
+            v-model="patientForm.anamnesis_life"
+          />
+
+          <!-- Анамнез в течение болезни -->
+          <ResizableTextarea
+            id="anamnesis_illness"
+            label="Анамнез в течение болезни:"
+            v-model="patientForm.anamnesis_illness"
+          />
+
+          <!-- Данные по ЭхоКТ -->
+          <ResizableTextarea id="EKG_data" label="Данные по ЭхоКТ:" v-model="patientForm.EKG_data" />
+          <div class="flex justify-end items-center">
+            <router-link :to="{ name: 'PatientsHistory' }" class="mr-4">Отменить</router-link>
+            <button type="submit" class="ad-primary-btn">Добавить</button>
+          </div>
+        </div>
+
+      </form>
     </div>
   </div>
 </template>

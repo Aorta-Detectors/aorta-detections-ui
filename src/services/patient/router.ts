@@ -3,7 +3,7 @@ import Dashboard from '@/services/patient/pages/Dashboard.vue'
 import MainPatientPage from '@/services/patient/pages/MainPatientPage.vue'
 import PatientsHistory from '@/services/patient/pages/PatientsHistory.vue'
 import PatientList from '@/services/patient/pages/PatientList.vue'
-import PersonalAccountPage from '@/services/patient/pages/PersonalAccountPage.vue'
+import PersonalAccountPage from '@/services/security/pages/PersonalAccountPage.vue'
 import PatientNavBar from '@/services/patient/parials/PatientNavBar.vue'
 
 export const PatientRoutes = [
