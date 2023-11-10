@@ -55,87 +55,10 @@ function handleUpdateAppointment() {}
 
 <template>
   <div class="overflow-x-auto">
-    <PageHeaderComponent :title="`Приема №${id} от 10.10.2023`" >
+    <PageHeaderComponent :title="`Обследования №${id} от 10.10.2023`" >
     </PageHeaderComponent>
 
     <div class="mt-8">
-      <div class="flex space-x-3">
-        <form
-          @submit.prevent
-          class="bg-white col-span-2 text-gray-300 group border hover:border-2 duration-300 hover:cursor-pointer transition-all relative border-dashed border-theme-primary0 h-[400px] rounded-xl flex justify-center items-center w-full"
-        >
-          <div class="flex items-center justify-center flex-col space-y-2 group-hover:text-theme-primary10">
-            <HeroIcon icon-type="outline" icon-name="ArrowUpTrayIcon" />
-            <span>Upload files</span>
-          </div>
-
-          <button
-            type="submit"
-            class="absolute bottom-2 right-2 bg-theme-primary10 hover:bg-theme-primary20 text-white px-4 py-2 rounded-tl-xl rounded-br-xl"
-          >
-            Сохранить
-          </button>
-        </form>
-        <div class="lg:block hidden w-[400px] border p-6 bg-white rounded-xl">
-          <ol class="relative text-gray-500 border-l ml-4 border-gray-200">
-            <li class="mb-5 ml-8">
-              <span
-                class="absolute flex items-center justify-center w-8 h-8 bg-green-200 rounded-full -left-4 ring-4 ring-theme-primary60"
-              >
-                <HeroIcon icon-type="outline" icon-name="ArrowPathIcon" class="animate-spin" />
-              </span>
-              <h3 class="leading-tight">Pre Processing</h3>
-              <p class="text-xs">Step details here</p>
-            </li>
-            <li class="my-5 ml-8">
-              <span
-                class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -left-4 ring-4 ring-theme-secondary30"
-              >
-                2
-              </span>
-              <h3 class="leading-tight">Aortic Segmentation</h3>
-              <p class="text-xs">Step details here</p>
-            </li>
-            <li class="mb-5 ml-8">
-              <span
-                class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -left-4 ring-4 ring-theme-secondary30"
-              >
-                3
-              </span>
-              <h3 class="leading-tight">Segmentation Networks</h3>
-              <p class="text-xs">Step details here</p>
-            </li>
-            <li class="mb-5 ml-8">
-              <span
-                class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -left-4 ring-4 ring-theme-secondary30"
-              >
-                4
-              </span>
-              <h3 class="leading-tight">Performance Metrics</h3>
-              <p class="text-xs">Step details here</p>
-            </li>
-            <li class="mb-5 ml-8">
-              <span
-                class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -left-4 ring-4 ring-theme-secondary30"
-              >
-                5
-              </span>
-              <h3 class="leading-tight">Performance Metrics</h3>
-              <p class="text-xs">Step details here</p>
-            </li>
-            <li class="ml-8">
-              <span
-                class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -left-4 ring-4 ring-theme-secondary30"
-              >
-                6
-              </span>
-              <h3 class="leading-tight">Performance Metrics</h3>
-              <p class="text-xs">Step details here</p>
-            </li>
-          </ol>
-        </div>
-      </div>
-
       <div class="w-full mt-10 border p-6 bg-white rounded-2xl">
         <form
           @submit.prevent="handleUpdateAppointment"
@@ -307,6 +230,83 @@ function handleUpdateAppointment() {}
             </div>
           </div>
         </form>
+      </div>
+
+      <div class="flex space-x-3 mt-6">
+        <form
+          @submit.prevent
+          class="bg-white col-span-2 text-gray-300 group border hover:border-2 duration-300 hover:cursor-pointer transition-all relative border-dashed border-theme-primary0 h-[400px] rounded-xl flex justify-center items-center w-full"
+        >
+          <div class="flex items-center justify-center flex-col space-y-2 group-hover:text-theme-primary10">
+            <HeroIcon icon-type="outline" icon-name="ArrowUpTrayIcon" />
+            <span>Загрузить файлы</span>
+          </div>
+
+          <button
+            type="submit"
+            class="absolute bottom-2 right-2 bg-theme-primary10 hover:bg-theme-primary20 text-white px-4 py-2 rounded-tl-xl rounded-br-xl"
+          >
+            Сохранить
+          </button>
+        </form>
+        <div class="lg:block hidden w-[400px] border p-6 bg-white rounded-xl">
+          <ol class="relative text-gray-500 border-l ml-4 border-gray-200">
+            <li class="mb-5 ml-8">
+              <span
+                class="absolute flex items-center justify-center w-8 h-8 bg-green-200 rounded-full -left-4 ring-4 ring-theme-primary60"
+              >
+                <HeroIcon icon-type="outline" icon-name="ArrowPathIcon" class="animate-spin" />
+              </span>
+              <h3 class="leading-tight">Pre Processing</h3>
+              <p class="text-xs">Step details here</p>
+            </li>
+            <li class="my-5 ml-8">
+              <span
+                class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -left-4 ring-4 ring-theme-secondary30"
+              >
+                2
+              </span>
+              <h3 class="leading-tight">Aortic Segmentation</h3>
+              <p class="text-xs">Step details here</p>
+            </li>
+            <li class="mb-5 ml-8">
+              <span
+                class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -left-4 ring-4 ring-theme-secondary30"
+              >
+                3
+              </span>
+              <h3 class="leading-tight">Segmentation Networks</h3>
+              <p class="text-xs">Step details here</p>
+            </li>
+            <li class="mb-5 ml-8">
+              <span
+                class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -left-4 ring-4 ring-theme-secondary30"
+              >
+                4
+              </span>
+              <h3 class="leading-tight">Performance Metrics</h3>
+              <p class="text-xs">Step details here</p>
+            </li>
+            <li class="mb-5 ml-8">
+              <span
+                class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -left-4 ring-4 ring-theme-secondary30"
+              >
+                5
+              </span>
+              <h3 class="leading-tight">Performance Metrics</h3>
+              <p class="text-xs">Step details here</p>
+            </li>
+            <li class="ml-8">
+              <span
+                class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -left-4 ring-4 ring-theme-secondary30"
+              >
+                6
+              </span>
+              <h3 class="leading-tight">Performance Metrics</h3>
+              <p class="text-xs">Step details here</p>
+            </li>
+          </ol>
+        </div>
       </div>
     </div>
   </div>

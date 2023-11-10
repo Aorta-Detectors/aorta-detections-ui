@@ -1,74 +1,85 @@
-<script>
+<script setup>
 import useVuelidate from '@vuelidate/core'
-import { required, helpers, numeric  } from '@vuelidate/validators'
+import { required, helpers, numeric } from '@vuelidate/validators'
 import ErrorComponent from '../../../components/common/ErrorComponent.vue'
 import ResizableTextarea from '../../../components/ResizableTextarea.vue'
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import PageHeaderComponent from '@/components/common/PageHeaderComponent.vue'
-export default {
-  name: 'AddAppointment',
-  components: { PageHeaderComponent, ErrorComponent, ResizableTextarea, VueDatePicker },
+import HeroIcon from '@/components/common/HeroIcon.vue'
+import { computed, reactive } from 'vue'
+import OMCComponent from '@/components/common/form/OMCComponent.vue'
+import { validateOMC } from '@/utils/validateOMC'
+const patientForm = reactive({
+  OMC: null,
+  FIO: null,
+  sex: null,
+  birth_date: null,
+  height: null,
+  weight: null,
 
-  data() {
-    return {
-      v$: useVuelidate(),
-
-      patientForm: {
-        OMC: null,
-        FIO: null,
-
-        sex: null,
-        birth_date: null,
-        height: null,
-        weight: null,
-
-        blood_pressure: null,
-        pulse: null,
-        swelling: null,
-
-        complaints: null,
-        diagnosis: null,
-        complications: null,
-        accompanying_illnesses: null,
-
-        anamnesis_life: null,
-        anamnesis_illness: null,
-        EKG_data: null
-      }
+  receptionsList: [
+    {
+      blood_pressure: null,
+      pulse: null,
+      swelling: null,
+      complaints: null,
+      diagnosis: null,
+      complications: null,
+      accompanying_illnesses: null,
+      anamnesis_life: null,
+      anamnesis_illness: null,
+      EKG_data: null
     }
-  },
+  ]
+})
 
-  computed: {
+const addReception = ()=> {
+  patientForm.receptionsList.push( {
+    blood_pressure: null,
+    pulse: null,
+    swelling: null,
+    complaints: null,
+    diagnosis: null,
+    complications: null,
+    accompanying_illnesses: null,
+    anamnesis_life: null,
+    anamnesis_illness: null,
+    EKG_data: null
+  })
+}
 
-  },
+const removeReception = (index)=> {
+  if(patientForm.receptionsList.length > 1){
+    patientForm.receptionsList.splice(index, 1)
+  }
+}
 
-  methods: {
-    handleDateSelection(date) {
-      console.log(date)
+const rules = computed(() => ({
+  patientForm: {
+    OMC: {
+      required: helpers.withMessage('Это обязательное поле', required),
+      numeric: helpers.withMessage('Допускаются только цифры', numeric),
+      name_validation: {
+        $validator: validateOMC,
+        $message: 'Длина 16 символов'
+      }
     },
-
-    handleAddAppointment() {
-      this.v$.patientForm.$touch()
-      if (!this.v$.patientForm.$error) {
-      }
+    FIO: {
+      required: helpers.withMessage('Это обязательное поле', required)
     }
-  },
+  }
+}))
 
-  validations() {
-    return {
-      patientForm: {
-        OMC: {
-          required: helpers.withMessage('Это обязательное поле', required),
-          numeric: helpers.withMessage('Допускаются только цифры', numeric)
-          // is_16_digits: helpers.regex(/^\d{16}$/),
-        },
-        FIO: {
-          required: helpers.withMessage('Это обязательное поле', required)
-          // words_3: helpers.regex(/^/),
-        }
-      }
-    }
+const v$ = useVuelidate(rules, { patientForm })
+
+function handleDateSelection(date) {
+  console.log(date)
+}
+
+function handleAddAppointment() {
+  v$.value.$touch()
+  if (!v$.value.$error) {
   }
 }
 </script>
@@ -76,32 +87,27 @@ export default {
 <template>
   <div>
     <div class="">
-      <PageHeaderComponent title="Оформление нового приема" />
+      <PageHeaderComponent title="Оформление нового обследования" />
       <p class="py-4 text-gray-400">Пожалуйста, заполните следующие поля</p>
     </div>
 
-    <div class="w-full p-6 bg-white rounded-2xl">
-      <form @submit.prevent="handleAddAppointment" class="flex flex-col space-y-8" autocomplete="off">
-        <div class="grid grid-cols-1 lg:grid-cols-2  gap-4">
+    <div class="w-full bg-white rounded-2xl">
+      <form
+        @submit.prevent="handleAddAppointment"
+        class="flex flex-col space-y-8"
+        autocomplete="off"
+      >
+        <div class=" px-6 pt-6 space-y-4">
           <!-- Полис -->
-          <div>
-            <label for="OMC" class="block mb-2 text-sm font-medium text-gray-900"
-              >Номер полиса ОМС:</label
-            >
-            <input
-              v-model="v$.patientForm.OMC.$model"
-              type="text"
-              id="OMC"
-              class="ad-input"
-              placeholder=""
-            />
-            <ErrorComponent :errors="v$.patientForm.OMC.$errors" />
-          </div>
+          <OMCComponent
+            v-model="v$.patientForm.OMC.$model"
+            :errors-list="v$.patientForm.OMC.$errors"
+          />
 
           <!-- ФИО -->
           <div>
             <label for="FIO" class="block mb-2 text-sm font-medium text-gray-900"
-              >Фамилия Имя Отчество:</label
+            >Фамилия Имя Отчество:</label
             >
             <input
               v-model="v$.patientForm.FIO.$model"
@@ -112,7 +118,8 @@ export default {
             />
             <ErrorComponent :errors="v$.patientForm.FIO.$errors" />
           </div>
-
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 px-6 ">
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
             <!-- Пол -->
             <div>
@@ -170,90 +177,119 @@ export default {
               class="py-1.5"
               text-input
               :enable-time-picker="false"
-              :action-row="{ showNow: true }" now-button-label="Сегодня"
+              :action-row="{ showNow: true }"
+              now-button-label="Сегодня"
             />
-          </div>
-
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <!-- Кровяное давление -->
-            <div>
-              <label for="blood_pressure" class="block mb-2 text-sm font-medium text-gray-900"
-                >Кровяное давление:</label
-              >
-              <input
-                v-model="patientForm.blood_pressure"
-                type="text"
-                id="blood_pressure"
-                class="ad-input"
-              />
-            </div>
-
-            <!-- Пульс -->
-            <div>
-              <label for="height" class="block mb-2 text-sm font-medium text-gray-900"
-                >Пульс:</label
-              >
-              <input
-                v-model="patientForm.pulse"
-                type="number"
-                id="height"
-                class="ad-input"
-                min="0"
-                max="250"
-              />
-            </div>
-          </div>
-
-          <!-- Отечность -->
-          <div>
-            <label for="swelling" class="block mb-2 text-sm font-medium text-gray-900"
-              >Отечность:</label
-            >
-            <input v-model="patientForm.swelling" type="text" id="swelling" class="ad-input" />
-          </div>
-
-          <!-- Жалобы -->
-          <ResizableTextarea id="complaints" label="Жалобы:" v-model="patientForm.complaints" />
-
-          <!-- Диагноз -->
-          <ResizableTextarea id="diagnosis" label="Диагноз:" v-model="patientForm.diagnosis" />
-
-          <!-- Осложнения -->
-          <ResizableTextarea
-            id="complications"
-            label="Осложнения:"
-            v-model="patientForm.complications"
-          />
-
-          <!-- Сопуствующие заболевания -->
-          <ResizableTextarea
-            id="accompanying_illnesses"
-            label="Сопуствующие заболевания:"
-            v-model="patientForm.accompanying_illnesses"
-          />
-
-          <!-- Анамнез в течение жизни -->
-          <ResizableTextarea
-            id="anamnesis_life"
-            label="Анамнез в течение жизни:"
-            v-model="patientForm.anamnesis_life"
-          />
-
-          <!-- Анамнез в течение болезни -->
-          <ResizableTextarea
-            id="anamnesis_illness"
-            label="Анамнез в течение болезни:"
-            v-model="patientForm.anamnesis_illness"
-          />
-
-          <!-- Данные по ЭхоКТ -->
-          <ResizableTextarea id="EKG_data" label="Данные по ЭхоКТ:" v-model="patientForm.EKG_data" />
-          <div class="flex justify-end items-center">
-            <router-link :to="{ name: 'AppointmentsHistory' }" class="mr-4">Отменить</router-link>
-            <button type="submit" class="ad-primary-btn">Добавить</button>
           </div>
         </div>
 
+        <fieldset class="rounded-md space-y-4 px-6 w-full">
+          <legend class="">Список приемов ({{ patientForm.receptionsList.length }})</legend>
+          <TransitionGroup name="list" tag="ul">
+             <fieldset
+            v-for="(reception, index) in patientForm.receptionsList"
+            :key="index"
+            class="border white mb-4 relative border-solid border-gray-300 p-3 rounded-md lg:grid lg:grid-cols-2 lg:space-y-0 space-y-4 lg:gap-4 w-full"
+          >
+            <legend class="">Прием №{{index + 1}} от 11.10.2023</legend>
+               <button v-if='patientForm.receptionsList.length > 1' @click.prevent="removeReception(index)" class="absolute text-red-500 transition-all hover:text-white hover:bg-red-500 -top-6 -right-4 bg-white border rounded-full p-2">
+                 <HeroIcon icon-type="outline" icon-name="XMarkIcon" class="h-5 w-5" />
+               </button>
+            <div class="col-span-2">
+              <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                <!-- Кровяное давление -->
+                <div>
+                  <label for="blood_pressure" class="block mb-2 text-sm font-medium text-gray-900"
+                    >Кровяное давление:</label
+                  >
+                  <input
+                    v-model="reception.blood_pressure"
+                    type="text"
+                    id="blood_pressure"
+                    class="ad-input"
+                  />
+                </div>
+
+                <!-- Пульс -->
+                <div>
+                  <label for="height" class="block mb-2 text-sm font-medium text-gray-900"
+                    >Пульс:</label
+                  >
+                  <input
+                    v-model="reception.pulse"
+                    type="number"
+                    id="height"
+                    class="ad-input"
+                    min="0"
+                    max="250"
+                  />
+                </div>
+
+                <!-- Отечность -->
+                <div>
+                  <label for="swelling" class="block mb-2 text-sm font-medium text-gray-900"
+                    >Отечность:</label
+                  >
+                  <input v-model="reception.swelling" type="text" id="swelling" class="ad-input" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Жалобы -->
+            <ResizableTextarea id="complaints" label="Жалобы:" v-model="reception.complaints" />
+
+            <!-- Диагноз -->
+            <ResizableTextarea id="diagnosis" label="Диагноз:" v-model="reception.diagnosis" />
+
+            <!-- Осложнения -->
+            <ResizableTextarea
+              id="complications"
+              label="Осложнения:"
+              v-model="reception.complications"
+            />
+
+            <!-- Сопуствующие заболевания -->
+            <ResizableTextarea
+              id="accompanying_illnesses"
+              label="Сопуствующие заболевания:"
+              v-model="reception.accompanying_illnesses"
+            />
+
+            <!-- Анамнез в течение жизни -->
+            <ResizableTextarea
+              id="anamnesis_life"
+              label="Анамнез в течение жизни:"
+              v-model="reception.anamnesis_life"
+            />
+
+            <!-- Анамнез в течение болезни -->
+            <ResizableTextarea
+              id="anamnesis_illness"
+              label="Анамнез в течение болезни:"
+              v-model="reception.anamnesis_illness"
+            />
+
+            <!-- Данные по ЭхоКТ -->
+            <ResizableTextarea
+              class="col-span-2"
+              id="EKG_data"
+              label="Данные по ЭхоКТ:"
+              v-model="reception.EKG_data"
+            />
+          </fieldset>
+          </TransitionGroup>
+          <div>
+            <button @click.prevent="addReception" class="flex space-x-2 items-center">
+              <HeroIcon icon-type="outline" icon-name="PlusCircleIcon" class="h-5 w-5" />
+              <span>Добавить прием</span>
+            </button>
+          </div>
+        </fieldset>
+
+        <div class="flex justify-end items-center bg-gray-50 p-6">
+          <router-link :to="{ name: 'AppointmentsHistory' }" class="mr-4">Отменить</router-link>
+          <button type="submit" class="ad-primary-btn">Добавить</button>
+        </div>
       </form>
     </div>
   </div>

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type {ICommonStore} from "@/shared/types/common.types";
+import type {ICommonStore} from "@/shared/models/common.models";
 
 export const useCommonStore = defineStore('common', {
   state: (): ICommonStore => ({

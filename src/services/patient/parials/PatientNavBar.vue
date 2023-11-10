@@ -10,7 +10,7 @@
               class="flex text-theme-primary10 rounded justify-items-start items-center py-2 px-4 w-full space-x-2 transition-colors duration-150 text-gray-400 hover:text-white hover:bg-theme-primary20"
             >
               <HeroIcon icon-type="outline" icon-name="PlusCircleIcon" />
-              <span>Оформить новый прием</span>
+              <span>Оформить новое обследование</span>
             </router-link>
           </div>
         </div>
