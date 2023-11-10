@@ -1,0 +1,69 @@
+<template>
+  <div>
+    <label for="OMC" class="block mb-2 text-sm font-medium text-gray-900"
+    >Номер полиса ОМС:</label
+    >
+    <input
+      type="text"
+      v-imask="mask"
+      @accept="onAccept"
+      @complete="onComplete"
+      @keyup.delete="$emit('update:modelValue', $event.target.value)"
+      :value="modelValue"
+      id="OMC"
+      class="ad-input text-2xl font-bold text-center"
+      placeholder=""
+    />
+    <ErrorComponent :errors="errorsList" />
+  </div>
+</template>
+
+<script>
+import { IMaskDirective } from "vue-imask";
+import ErrorComponent from '@/components/common/ErrorComponent.vue'
+export default {
+  name: "OMCComponent",
+  components: { ErrorComponent },
+  props: {
+    modelValue: String,
+
+    modelValueError: {
+      type: Boolean,
+      default: false,
+    },
+
+    errorsList: {
+      type: [Array, Object],
+      default: () => [],
+    },
+  },
+
+  directives: {
+    imask: IMaskDirective,
+  },
+
+  data() {
+    return {
+      value: "",
+      mask: {
+        mask: "0000-0000-0000-0000",
+        lazy: false,
+      },
+    };
+  },
+
+  emits: ["update:modelValue"],
+
+  methods: {
+    onAccept(e) {
+      const maskRef = e.detail;
+      this.value = maskRef.value;
+      //TODO: if not complete event
+    },
+    onComplete(e) {
+      const maskRef = e.detail;
+      this.$emit("update:modelValue", maskRef.unmaskedValue);
+    }
+  }
+};
+</script>
