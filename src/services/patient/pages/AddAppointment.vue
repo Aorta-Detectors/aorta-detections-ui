@@ -10,6 +10,13 @@ import HeroIcon from '@/components/common/HeroIcon.vue'
 import { computed, reactive } from 'vue'
 import OMCComponent from '@/components/common/form/OMCComponent.vue'
 import { validateOMC } from '@/utils/validateOMC'
+import { usePatientStore } from '@/services/patient/store'
+import { storeToRefs } from 'pinia'
+
+const patientStore = usePatientStore();
+const { status } = storeToRefs(patientStore);
+var isPatientExist = false;
+
 const patientForm = reactive({
   OMC: null,
   FIO: null,
@@ -77,10 +84,26 @@ function handleDateSelection(date) {
   console.log(date)
 }
 
-function handleAddAppointment() {
+// Сохранение patientForm в бд и редиарект на страничку Дашборда
+async function handleAddAppointment() {
   v$.value.$touch()
   if (!v$.value.$error) {
+    await patientStore.createAppointment(patientForm);
+    await router.push({ name: 'Dashboard' });
   }
+}
+
+// Проверка присутсвует ли уже пользователь с таким ОМС в бд на бэке
+async function handleOMCChange() {
+  v$.value.$touch()
+  if (!v$.value.$error) {
+    consol.log("inside");
+    isPatientExist = await patientStore.getPatient(patientForm.OMC);
+  }
+}
+
+function testOMCRequest(OMCnumber) {
+  consol.log("number ", OMCnumber);
 }
 </script>
 
@@ -102,10 +125,11 @@ function handleAddAppointment() {
           <OMCComponent
             v-model="v$.patientForm.OMC.$model"
             :errors-list="v$.patientForm.OMC.$errors"
+            @update="testOMCRequest"
           />
 
           <!-- ФИО -->
-          <div>
+          <div v-if="isPatientExist">
             <label for="FIO" class="block mb-2 text-sm font-medium text-gray-900"
             >Фамилия Имя Отчество:</label
             >
@@ -119,7 +143,7 @@ function handleAddAppointment() {
             <ErrorComponent :errors="v$.patientForm.FIO.$errors" />
           </div>
         </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 px-6 ">
+        <div v-if="isPatientExist" class="grid grid-cols-1 lg:grid-cols-2 gap-4 px-6 ">
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
             <!-- Пол -->
             <div>
