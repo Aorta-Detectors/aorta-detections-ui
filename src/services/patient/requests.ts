@@ -1,9 +1,10 @@
 import commonApi from '@/http/commonApi'
+import api from '@/http'
 
 const infoBasePath = '/info';
 export default class InfoRequests {
-    static async get_patient(patientOMS: any) {
-        return commonApi().get(`${infoBasePath}/get_patient`, patientOMS);
+    static async get_patient(patientOMS: number | string) {
+        return api.get(`${infoBasePath}/get_patient?patient_id=${patientOMS}`);
     }
     static async create_appointment(payloadParams: any) {
         return commonApi().post(`${infoBasePath}/create_appointment`, payloadParams);
