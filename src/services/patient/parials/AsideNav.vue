@@ -16,7 +16,7 @@ onBeforeMount(async () => {
 
 <template>
   <nav
-    class="bg-theme-primary0 hidden lg:flex flex-col justify-between w-[16rem] text-white z-10 static start-0 bottom-0 top-0"
+    class="bg-theme-primary0 hidden lg:flex flex-col justify-between w-[19rem] text-white z-10 static start-0 bottom-0 top-0"
   >
     <div class="p-3">
       <LogoComponent class="text-xl" />
@@ -28,7 +28,7 @@ onBeforeMount(async () => {
         </router-link>
         <router-link :to="{ name: 'AppointmentsHistory' }" class="btn" active-class="active-class-nav">
           <HeroIcon icon-type="outline" icon-name="ClockIcon" />
-          <span>История приема</span>
+          <span class="whitespace-nowrap">История обследования</span>
         </router-link>
 
         <router-link :to="{ name: 'PatientList' }" class="btn" active-class="active-class-nav">
