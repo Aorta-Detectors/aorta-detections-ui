@@ -21,12 +21,16 @@ const male = true
 const female = false
 
 const patientForm = reactive({
-  patient_id: null,
-  full_name: null,
-  is_male: null,
-  birth_date: null,
-  height: null,
-  weight: null,
+  examination_id: 1,
+
+  patientData: {
+    patient_id: null,
+    full_name: null,
+    is_male: null,
+    birth_date: null,
+    height: null,
+    weight: null,
+  },
 
   receptionsList: [
     {
@@ -37,8 +41,8 @@ const patientForm = reactive({
       diagnosis: null,
       disease_complications: null,
       comorbidities: null,
-      life_anamnesis: null,
       disease_anamnesis: null,
+      life_anamnesis: null,
       echocardiogram_data: null
     }
   ]
@@ -53,8 +57,8 @@ const addReception = () => {
     diagnosis: null,
     disease_complications: null,
     comorbidities: null,
-    life_anamnesis: null,
     disease_anamnesis: null,
+    life_anamnesis: null,
     echocardiogram_data: null
   })
 }
@@ -67,16 +71,18 @@ const removeReception = (index) => {
 
 const rules = computed(() => ({
   patientForm: {
-    patient_id: {
-      required: helpers.withMessage('Это обязательное поле', required),
-      numeric: helpers.withMessage('Допускаются только цифры', numeric),
-      name_validation: {
-        $validator: validateOMC,
-        $message: 'Длина 16 символов'
+    patientData: {
+      patient_id: {
+        required: helpers.withMessage('Это обязательное поле', required),
+        numeric: helpers.withMessage('Допускаются только цифры', numeric),
+        name_validation: {
+          $validator: validateOMC,
+          $message: 'Длина 16 символов'
+        }
+      },
+      full_name: {
+        required: helpers.withMessage('Это обязательное поле', required)
       }
-    },
-    full_name: {
-      required: helpers.withMessage('Это обязательное поле', required)
     }
   }
 }))
@@ -89,9 +95,30 @@ function handleDateSelection(date) {
 
 // Сохранение patientForm в бд и редиарект на страничку Дашборда
 async function handleAddAppointment() {
+  console.log("INFO: handleAddAppointment")
   v$.value.$touch()
   if (!v$.value.$error) {
-    await patientStore.createAppointment(patientForm)
+    console.log("INFO: sending appointment")
+    if (!is_patient_exist) {
+      console.log("INFO: patient exists")
+      // пока что отправляется только первый элемент из receptionsList TODO
+      const appointmentObject = {
+        examination_id: patientForm.examination_id,
+        ...patientForm.receptionsList[0],
+      };
+      console.log(appointmentObject);
+      await patientStore.addAppointment(appointmentObject)
+    }
+    else {
+      console.log("INFO: patient does not exist")
+      // пока что отправляется только первый элемент из receptionsList TODO
+      const examinationObject = {
+        ...patientForm.patientData,
+        ...patientForm.receptionsList[0],
+      };
+      console.log(examinationObject);
+      await patientStore.createExamination(examinationObject)
+    }
     await router.push({ name: 'Dashboard' })
   }
 }
@@ -118,46 +145,46 @@ async function handleOMCChange(OMCNumber) {
         <div class="px-6 pt-6 space-y-4">
           <!-- Полис -->
           <OMCComponent
-            v-model="v$.patientForm.patient_id.$model"
-            :errors-list="v$.patientForm.patient_id.$errors"
+            v-model="v$.patientForm.patientData.patient_id.$model"
+            :errors-list="v$.patientForm.patientData.patient_id.$errors"
             @onCompleted="handleOMCChange"
             :is-loading="isLoadingOMC"
           />
 
           <!-- ФИО -->
           <div v-if="!is_patient_exist">
-            <label for="full_name" class="block mb-2 text-sm font-medium text-gray-900"
+            <label for="patientData.full_name" class="block mb-2 text-sm font-medium text-gray-900"
               >Фамилия Имя Отчество:</label
             >
             <input
-              v-model="v$.patientForm.full_name.$model"
+              v-model="v$.patientForm.patientData.full_name.$model"
               type="text"
-              id="full_name"
+              id="patientData.full_name"
               class="ad-input"
               placeholder=""
             />
-            <ErrorComponent :errors="v$.patientForm.full_name.$errors" />
+            <ErrorComponent :errors="v$.patientForm.patientData.full_name.$errors" />
           </div>
         </div>
         <div v-if="!is_patient_exist" class="grid grid-cols-1 lg:grid-cols-2 gap-4 px-6">
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
             <!-- Пол -->
             <div>
-              <label for="is_male" class="block mb-2 text-sm font-medium text-gray-900">Пол:</label>
-              <select id="is_male" name="is_male" v-model="patientForm.is_male" class="ad-input">
+              <label for="patientData.is_male" class="block mb-2 text-sm font-medium text-gray-900">Пол:</label>
+              <select id="patientData.is_male" name="patientData.is_male" v-model="patientForm.patientData.is_male" class="ad-input">
                 <option value="male">Мужчина</option>
                 <option value="female">Женщина</option>
               </select>
             </div>
 
             <div>
-              <label for="height" class="block mb-2 text-sm font-medium text-gray-900"
+              <label for="patientData.height" class="block mb-2 text-sm font-medium text-gray-900"
                 >Рост (в см):</label
               >
               <input
-                v-model="patientForm.height"
+                v-model="patientForm.patientData.height"
                 type="number"
-                id="height"
+                id="patientData.height"
                 class="ad-input"
                 min="0"
                 max="300"
@@ -166,13 +193,13 @@ async function handleOMCChange(OMCNumber) {
 
             <!-- Вес -->
             <div>
-              <label for="weight" class="block mb-2 text-sm font-medium text-gray-900"
+              <label for="patientData.weight" class="block mb-2 text-sm font-medium text-gray-900"
                 >Вес (в кг):</label
               >
               <input
-                v-model="patientForm.weight"
+                v-model="patientForm.patientData.weight"
                 type="number"
-                id="weight"
+                id="patientData.weight"
                 class="ad-input"
                 min="0"
                 max="700"
@@ -182,17 +209,17 @@ async function handleOMCChange(OMCNumber) {
           </div>
           <!-- Дата Рождения -->
           <div>
-            <label for="birth_date" class="block mb-2 text-sm font-medium text-gray-900"
+            <label for="patientData.birth_date" class="block mb-2 text-sm font-medium text-gray-900"
               >Дата Рождения:</label
             >
             <VueDatePicker
               @update:model-value="handleDateSelection"
-              v-model="patientForm.birth_date"
+              v-model="patientForm.patientData.birth_date"
               locale="ru-Ru"
               format="dd/MM/yyyy"
               cancelText="Отменить"
               selectText="Выбрать"
-              id="birth_date"
+              id="patientData.birth_date"
               class="py-1.5"
               text-input
               :enable-time-picker="false"
@@ -235,13 +262,13 @@ async function handleOMCChange(OMCNumber) {
 
                   <!-- Пульс -->
                   <div>
-                    <label for="height" class="block mb-2 text-sm font-medium text-gray-900"
+                    <label for="pulse" class="block mb-2 text-sm font-medium text-gray-900"
                       >Пульс:</label
                     >
                     <input
                       v-model="reception.pulse"
                       type="number"
-                      id="height"
+                      id="pulse"
                       class="ad-input"
                       min="0"
                       max="250"

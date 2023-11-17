@@ -23,9 +23,20 @@ export const usePatientStore = defineStore('patientStore', {
 
 
     actions: {
-        async createAppointment(payload: any) {
+        async addAppointment(payload: any) {
             try {
-                const { data, status } = await InfoRequests.create_appointment(payload);
+                const { data, status } = await InfoRequests.add_appointment(payload);
+            }
+            catch (e) {
+                const errorMessage = handleError(e);
+                console.error(errorMessage);
+                throw e;
+            }
+        },
+
+        async createExamination(payload: any) {
+            try {
+                const { data, status } = await InfoRequests.create_examination(payload);
             }
             catch (e) {
                 const errorMessage = handleError(e);
@@ -47,11 +58,14 @@ export const usePatientStore = defineStore('patientStore', {
                     if(resp?.status === 404){
                         this.is_patient_exist = false
                         Notification.error(OMC_NOT_FOUND)
+                    } else {
+                        throw e;
                     }
-                  }
-                throw e;
+                } else {
+                    throw e;
+                }
             }finally {
-                this.isLoading =false
+                this.isLoading = false
             }
         },
     }
