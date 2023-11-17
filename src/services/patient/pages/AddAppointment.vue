@@ -16,10 +16,14 @@ import { storeToRefs } from 'pinia'
 const patientStore = usePatientStore()
 const { status, is_patient_exist, isLoadingOMC } = storeToRefs(patientStore)
 
+// т.к. сейчас у нас поле is_male это boolean
+const male = true
+const female = false
+
 const patientForm = reactive({
-  OMC: null,
-  FIO: null,
-  sex: null,
+  patient_id: null,
+  full_name: null,
+  is_male: null,
   birth_date: null,
   height: null,
   weight: null,
@@ -28,14 +32,14 @@ const patientForm = reactive({
     {
       blood_pressure: null,
       pulse: null,
-      swelling: null,
-      complaints: null,
+      swell: null,
+      complains: null,
       diagnosis: null,
-      complications: null,
-      accompanying_illnesses: null,
-      anamnesis_life: null,
-      anamnesis_illness: null,
-      EKG_data: null
+      disease_complications: null,
+      comorbidities: null,
+      life_anamnesis: null,
+      disease_anamnesis: null,
+      echocardiogram_data: null
     }
   ]
 })
@@ -44,14 +48,14 @@ const addReception = () => {
   patientForm.receptionsList.push({
     blood_pressure: null,
     pulse: null,
-    swelling: null,
-    complaints: null,
+    swell: null,
+    complains: null,
     diagnosis: null,
-    complications: null,
-    accompanying_illnesses: null,
-    anamnesis_life: null,
-    anamnesis_illness: null,
-    EKG_data: null
+    disease_complications: null,
+    comorbidities: null,
+    life_anamnesis: null,
+    disease_anamnesis: null,
+    echocardiogram_data: null
   })
 }
 
@@ -63,7 +67,7 @@ const removeReception = (index) => {
 
 const rules = computed(() => ({
   patientForm: {
-    OMC: {
+    patient_id: {
       required: helpers.withMessage('Это обязательное поле', required),
       numeric: helpers.withMessage('Допускаются только цифры', numeric),
       name_validation: {
@@ -71,7 +75,7 @@ const rules = computed(() => ({
         $message: 'Длина 16 символов'
       }
     },
-    FIO: {
+    full_name: {
       required: helpers.withMessage('Это обязательное поле', required)
     }
   }
@@ -114,33 +118,33 @@ async function handleOMCChange(OMCNumber) {
         <div class="px-6 pt-6 space-y-4">
           <!-- Полис -->
           <OMCComponent
-            v-model="v$.patientForm.OMC.$model"
-            :errors-list="v$.patientForm.OMC.$errors"
+            v-model="v$.patientForm.patient_id.$model"
+            :errors-list="v$.patientForm.patient_id.$errors"
             @onCompleted="handleOMCChange"
             :is-loading="isLoadingOMC"
           />
 
           <!-- ФИО -->
           <div v-if="!is_patient_exist">
-            <label for="FIO" class="block mb-2 text-sm font-medium text-gray-900"
+            <label for="full_name" class="block mb-2 text-sm font-medium text-gray-900"
               >Фамилия Имя Отчество:</label
             >
             <input
-              v-model="v$.patientForm.FIO.$model"
+              v-model="v$.patientForm.full_name.$model"
               type="text"
-              id="FIO"
+              id="full_name"
               class="ad-input"
               placeholder=""
             />
-            <ErrorComponent :errors="v$.patientForm.FIO.$errors" />
+            <ErrorComponent :errors="v$.patientForm.full_name.$errors" />
           </div>
         </div>
         <div v-if="!is_patient_exist" class="grid grid-cols-1 lg:grid-cols-2 gap-4 px-6">
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
             <!-- Пол -->
             <div>
-              <label for="sex" class="block mb-2 text-sm font-medium text-gray-900">Пол:</label>
-              <select id="sex" name="sex" v-model="patientForm.sex" class="ad-input">
+              <label for="is_male" class="block mb-2 text-sm font-medium text-gray-900">Пол:</label>
+              <select id="is_male" name="is_male" v-model="patientForm.is_male" class="ad-input">
                 <option value="male">Мужчина</option>
                 <option value="female">Женщина</option>
               </select>
@@ -246,13 +250,13 @@ async function handleOMCChange(OMCNumber) {
 
                   <!-- Отечность -->
                   <div>
-                    <label for="swelling" class="block mb-2 text-sm font-medium text-gray-900"
+                    <label for="swell" class="block mb-2 text-sm font-medium text-gray-900"
                       >Отечность:</label
                     >
                     <input
-                      v-model="reception.swelling"
+                      v-model="reception.swell"
                       type="text"
-                      id="swelling"
+                      id="swell"
                       class="ad-input"
                     />
                   </div>
@@ -260,45 +264,45 @@ async function handleOMCChange(OMCNumber) {
               </div>
 
               <!-- Жалобы -->
-              <ResizableTextarea id="complaints" label="Жалобы:" v-model="reception.complaints" />
+              <ResizableTextarea id="complains" label="Жалобы:" v-model="reception.complains" />
 
               <!-- Диагноз -->
               <ResizableTextarea id="diagnosis" label="Диагноз:" v-model="reception.diagnosis" />
 
               <!-- Осложнения -->
               <ResizableTextarea
-                id="complications"
+                id="disease_complications"
                 label="Осложнения:"
-                v-model="reception.complications"
+                v-model="reception.disease_complications"
               />
 
               <!-- Сопуствующие заболевания -->
               <ResizableTextarea
-                id="accompanying_illnesses"
+                id="comorbidities"
                 label="Сопуствующие заболевания:"
-                v-model="reception.accompanying_illnesses"
+                v-model="reception.comorbidities"
               />
 
               <!-- Анамнез в течение жизни -->
               <ResizableTextarea
-                id="anamnesis_life"
+                id="life_anamnesis"
                 label="Анамнез в течение жизни:"
-                v-model="reception.anamnesis_life"
+                v-model="reception.life_anamnesis"
               />
 
               <!-- Анамнез в течение болезни -->
               <ResizableTextarea
-                id="anamnesis_illness"
+                id="disease_anamnesis"
                 label="Анамнез в течение болезни:"
-                v-model="reception.anamnesis_illness"
+                v-model="reception.disease_anamnesis"
               />
 
               <!-- Данные по ЭхоКТ -->
               <ResizableTextarea
                 class="col-span-2"
-                id="EKG_data"
+                id="echocardiogram_data"
                 label="Данные по ЭхоКТ:"
-                v-model="reception.EKG_data"
+                v-model="reception.echocardiogram_data"
               />
             </fieldset>
           </TransitionGroup>
