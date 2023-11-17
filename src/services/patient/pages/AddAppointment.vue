@@ -93,23 +93,7 @@ async function handleAddAppointment() {
 }
 
 // Проверка присутсвует ли уже пользователь с таким ОМС в бд на бэке
-async function handleOMCChange() {
-  v$.value.$touch()
-  if (!v$.value.$error) {
-    console.log('inside')
-    await patientStore.getPatient(patientForm.OMC)
-  }
-}
-
-watch(
-  () => patientForm.OMC,
-  (newOMC, oldValue) => {
-    console.log('new OMC from watch: newOMC ', newOMC)
-    console.log('new OMC from watch: oldValue ', oldValue)
-  }
-)
-
-async function testOMCRequest(OMCNumber) {
+async function handleOMCChange(OMCNumber) {
   await patientStore.getPatient(OMCNumber)
 }
 </script>
@@ -132,12 +116,12 @@ async function testOMCRequest(OMCNumber) {
           <OMCComponent
             v-model="v$.patientForm.OMC.$model"
             :errors-list="v$.patientForm.OMC.$errors"
-            @onCompleted="testOMCRequest"
+            @onCompleted="handleOMCChange"
             :is-loading="isLoadingOMC"
           />
 
           <!-- ФИО -->
-          <div v-if="is_patient_exist">
+          <div v-if="!is_patient_exist">
             <label for="FIO" class="block mb-2 text-sm font-medium text-gray-900"
               >Фамилия Имя Отчество:</label
             >
@@ -151,7 +135,7 @@ async function testOMCRequest(OMCNumber) {
             <ErrorComponent :errors="v$.patientForm.FIO.$errors" />
           </div>
         </div>
-        <div v-if="is_patient_exist" class="grid grid-cols-1 lg:grid-cols-2 gap-4 px-6">
+        <div v-if="!is_patient_exist" class="grid grid-cols-1 lg:grid-cols-2 gap-4 px-6">
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
             <!-- Пол -->
             <div>
