@@ -12,7 +12,9 @@ import OMCComponent from '@/components/common/form/OMCComponent.vue'
 import { validateOMC } from '@/utils/validateOMC'
 import { usePatientStore } from '@/services/patient/store'
 import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const patientStore = usePatientStore()
 const { status, is_patient_exist, isLoadingOMC } = storeToRefs(patientStore)
 
@@ -93,6 +95,29 @@ function handleDateSelection(date) {
   console.log(date)
 }
 
+function addReceptionsListToFD(data, id) {
+  data.append("blood_pressure", patientForm.receptionsList[id].blood_pressure);
+  data.append("pulse", patientForm.receptionsList[id].pulse);
+  data.append("complains", patientForm.receptionsList[id].complains);
+  data.append("diagnosis", patientForm.receptionsList[id].diagnosis);
+  data.append("disease_complications", patientForm.receptionsList[id].disease_complications);
+  data.append("disease_anamnesis", patientForm.receptionsList[id].disease_anamnesis);
+  data.append("life_anamnesis", patientForm.receptionsList[id].life_anamnesis);
+  data.append("echocardiogram_data", patientForm.receptionsList[id].echocardiogram_data);
+  data.append("comorbidities", patientForm.receptionsList[id].comorbidities);
+  data.append("swell", patientForm.receptionsList[id].swell);
+}
+
+function addPatientDataToFD(data) {
+  // пока что посылам 1 замето patient_id, т.к. на бэке есть проблема с большим числом TODO
+  data.append("patient_id", 1);
+  data.append("full_name", patientForm.patientData.full_name);
+  data.append("is_male", patientForm.patientData.is_male);
+  data.append("birth_date", patientForm.patientData.birth_date.toISOString().split('T')[0]);
+  data.append("height", patientForm.patientData.height);
+  data.append("weight", patientForm.patientData.weight);
+}
+
 // Сохранение patientForm в бд и редиарект на страничку Дашборда
 async function handleAddAppointment() {
   console.log("INFO: handleAddAppointment")
@@ -101,23 +126,30 @@ async function handleAddAppointment() {
     console.log("INFO: sending appointment")
     if (!is_patient_exist) {
       console.log("INFO: patient exists")
+
+      let appointment = new FormData();
+
       // пока что отправляется только первый элемент из receptionsList TODO
-      const appointmentObject = {
-        examination_id: patientForm.examination_id,
-        ...patientForm.receptionsList[0],
-      };
-      console.log(appointmentObject);
-      await patientStore.addAppointment(appointmentObject)
+      // receptionsList[0]
+      addReceptionsListToFD(appointment, 0)
+
+      console.log(appointment);
+      await patientStore.addAppointment(appointment, 1)
     }
     else {
       console.log("INFO: patient does not exist")
+
+      let examination = new FormData();
+
+      // patientData
+      addPatientDataToFD(examination);
+
       // пока что отправляется только первый элемент из receptionsList TODO
-      const examinationObject = {
-        ...patientForm.patientData,
-        ...patientForm.receptionsList[0],
-      };
-      console.log(examinationObject);
-      await patientStore.createExamination(examinationObject)
+      // receptionsList[0]
+      addReceptionsListToFD(examination, 0);
+
+      console.log(examination);
+      await patientStore.createExamination(examination)
     }
     await router.push({ name: 'Dashboard' })
   }
@@ -172,8 +204,8 @@ async function handleOMCChange(OMCNumber) {
             <div>
               <label for="patientData.is_male" class="block mb-2 text-sm font-medium text-gray-900">Пол:</label>
               <select id="patientData.is_male" name="patientData.is_male" v-model="patientForm.patientData.is_male" class="ad-input">
-                <option value="male">Мужчина</option>
-                <option value="female">Женщина</option>
+                <option value=true>Мужчина</option>
+                <option value=false>Женщина</option>
               </select>
             </div>
 
@@ -203,7 +235,7 @@ async function handleOMCChange(OMCNumber) {
                 class="ad-input"
                 min="0"
                 max="700"
-                step="0.1"
+                step="1"
               />
             </div>
           </div>

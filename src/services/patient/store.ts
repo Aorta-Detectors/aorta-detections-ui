@@ -23,9 +23,9 @@ export const usePatientStore = defineStore('patientStore', {
 
 
     actions: {
-        async addAppointment(payload: any) {
+        async addAppointment(payload: any, examination_id: number) {
             try {
-                const { data, status } = await InfoRequests.add_appointment(payload);
+                const { data, status } = await InfoRequests.add_appointment(payload, examination_id);
             }
             catch (e) {
                 const errorMessage = handleError(e);
