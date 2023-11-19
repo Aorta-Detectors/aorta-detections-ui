@@ -1,6 +1,6 @@
 <template>
     <div>
-        <label :for="id" class="block mb-2 text-sm font-medium text-gray-900">{{ label }}</label>
+        <label :for="id" class="block mb-2 font-medium text-gray-900">{{ label }}</label>
         <textarea
             :id="id"
             :value="modelValue"
