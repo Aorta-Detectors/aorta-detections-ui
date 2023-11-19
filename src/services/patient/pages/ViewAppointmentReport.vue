@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import PageHeaderComponent from '@/components/common/PageHeaderComponent.vue'
-import { computed, reactive } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import HeroIcon from '@/components/common/HeroIcon.vue'
 import { useRoute } from 'vue-router'
 import ResizableTextarea from '@/components/ResizableTextarea.vue'
+import jsPDF from 'jspdf';
+
 
 const appointment = reactive({
   id: 2,
@@ -51,10 +53,65 @@ function handleDateSelection(date) {
 }
 
 function handleUpdateAppointment() {}
+
+const content = ref(null)
+
+function addHeader(pdf) {
+  pdf.setFontSize(20);
+  pdf.text('Medical Report', 20, 20);
+  pdf.line(20, 25, 190, 25); // Horizontal line under the title
+}
+
+const img = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRw1J6q6gTxhkpucX2Vw6QqITvYk2UPs-weH2aLZKKY1AH1tSp8-oqZ2_MZsW2HT7wUDk4&usqp=CAU'
+function generatePDF() {
+  // Create a new instance of jsPDF
+  // Create a new instance of jsPDF
+  const pdf = new jsPDF();
+
+  // Add content to the PDF
+  addReportDetails(pdf);
+  addPatientInfo(pdf);
+  addAorticValveMeasurements(pdf);
+  addAorticImages(pdf);
+
+  // Save the PDF with a specific name
+  pdf.save('medical-report.pdf');
+}
+
+function addReportDetails(pdf) {
+  pdf.setFontSize(18);
+  pdf.text('Medical Report', 20, 20);
+  pdf.line(20, 25, 190, 25); // Horizontal line under the title
+}
+
+function addPatientInfo(pdf) {
+  pdf.setFontSize(16);
+  pdf.text('Patient Information', 20, 40);
+  pdf.text('Name: John Doe', 20, 50);
+  pdf.text('Date of Birth: January 1, 1980', 20, 60);
+  pdf.text('Gender: Male', 20, 70);
+  pdf.text('Address: 123 Medical St, Cityville', 20, 80);
+}
+
+function addAorticValveMeasurements(pdf) {
+  pdf.setFontSize(16);
+  pdf.text('Aortic Valve Measurements', 20, 100);
+  pdf.text('Aortic Diameter: 3.2 cm', 20, 110);
+  pdf.text('Aortic Valve Area: 2.0 cm²', 20, 120);
+  pdf.text('Peak Aortic Velocity: 1.5 m/s', 20, 130);
+}
+
+function addAorticImages(pdf) {
+  const aorticImage1 = img; // Replace with the actual path to your image
+  const aorticImage2 = img; // Replace with the actual path to your image
+
+  pdf.addImage(aorticImage1, 'JPEG', 20, 150, 80, 60);
+  pdf.addImage(aorticImage2, 'JPEG', 110, 150, 80, 60);
+}
 </script>
 
 <template>
-  <div class="overflow-x-auto">
+  <div class="overflow-x-auto" ref='content' >
     <PageHeaderComponent :title="`Отчет №${id} от 10.10.2023`" description="Врач Pama Gondran">
       <div class="flex space-x-4">
         <button
@@ -73,6 +130,7 @@ function handleUpdateAppointment() {}
         <button
           type="button"
           id="print-list"
+          @click.prevent='generatePDF'
           class="flex space-x-2 px-2 py-2 rounded-md bg-white border hover:bg-gray-50 outline-none"
         >
           <HeroIcon
@@ -88,18 +146,33 @@ function handleUpdateAppointment() {}
 
     <div class="">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <div class="w-full mt-10 border p-6 bg-white h-[20rem]">
-          <h2>Report Details</h2>
+        <div class="w-full mt-10 border p-6 bg-white h-[14rem]">
+          <h2 class="text-gray-400 text-xl">Диагноз</h2>
+
+          <div class="text-black mt-6">
+            Дилатация восходящего отдела и аневризма брюшной аорты.
+            Выраженная аортальная недостаточность
+          </div>
         </div>
-        <div class="w-full mt-10 border p-6 bg-white h-[20rem]">
-          <h2>Patient information</h2>
+        <div class="w-full mt-10 border p-6 bg-white h-[14rem]">
+          <h2 class='text-gray-400 text-xl'>Информация о пациенте</h2>
+          <div class="mt-6">
+            <ul class="space-y-1  list-тщту list-inside">
+              <li class="font-bold text-2xl">
+                Пама Гондран
+              </li>
+              <li>
+                49 лет
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-5 gap-3 mt-4">
         <div class="bg-white lg:col-span-3 border p-4">
           <div class="flex justify-between w-full pb-2">
-            <h2 class="">Aorta Segmentation</h2>
+            <h2 class="">Сегментация аорты</h2>
             <div class="flex space-x-2">
               <button class="shadow p-1">
                 <HeroIcon
@@ -161,19 +234,100 @@ function handleUpdateAppointment() {}
        <div class="w-full lg:col-span-2 h-full ">
          <div class="grid grid-cols-1 gap-4 h-full">
            <div class="w-full col-span-2 border p-6 bg-white">
-             <h2>Aortic Valve</h2>
+             <h2 class="text-gray-400 text-xl">Данные КТ</h2>
+
+             <div class="mt-6">
+               <ul class="space-y-1 list-disc list-inside">
+                 <li class="">
+                   Аортальный клапан трехстворчатый
+                 </li>
+                 <li>
+                   Диаметр ФК АК 24,2*33,5 мМ
+                 </li>
+                 <li>
+                   Диаметр синусов Вальсальвы 45,6*45,8 мм
+                 </li>
+                 <li>
+                   Диаметр тубулярной части вд 48,2*48,4 Мм
+                 </li>
+                 <li>
+                   Диамето ВА перед БЦС 34,9*32 мм
+                 </li>
+                 <li>
+                   Диаметр дуги аорты 31.8*31,6 мм
+                 </li>
+                 <li>
+                   Коронарные артерии - отхождение типичное
+                 </li>
+                 <li>
+                   Наличие диссекции/аномалии +/-
+                 </li>
+                 <li>
+                   Периметры, длины окружностей, макс/мин/сред диаметры
+                 </li>
+               </ul>
+             </div>
            </div>
            <div class="w-full col-span-2 h-full border p-6 bg-white">
-             <h2>Measurements</h2>
+             <h2>Данные ЭХОКГ</h2>
+
+             <div class="mt-6">
+               <ul class="space-y-1 list-disc list-inside">
+                 <li class="">
+                   Степень AH - PISA - Объем регург 15 мл
+                 </li>
+                 <li>
+                   OB 25%.
+                 </li>
+                 <li>
+                   ЗС 45мм - МЖП 30мм
+                 </li>
+                 <li>
+                   КДО 25мл - КСО 24мл
+                 </li>
+               </ul>
+             </div>
            </div>
          </div>
        </div>
       </div>
 
       <div class="mt-8">
+        <div class="w-full  border p-6 bg-white mb-6">
+          <h2 class="text-gray-400 text-xl">Рекомендовано</h2>
+          <div class="mt-6">
+            <ul class="space-y-1 list-disc list-inside">
+              <li class="">
+                Динамическое наблюдение кардиолога
+              </li>
+              <li>
+                Контроль АД и ЧСС
+              </li>
+              <li>
+                Исключить психо-эмоциональный и Физический стресс
+              </li>
+              <li>
+                Исключить приемы с пробой Вальсальвы
+              </li>
+              <li>
+                Консультация кардиохирурга/сердечно-сосудистого хирурга
+              </li>
+              <li>
+                Имплантация стент-графта с брюшную аорту в плановом порядке
+              </li>
+              <li>
+                МСКТ-ангиография аорты через 1 год
+              </li>
+              <li>
+                ЭХОКГ через1 год
+              </li>
+              <li>
+                Консультация кардиохирурга через 1 ГОД
+              </li>
+            </ul>
+          </div>
+        </div>
         <ResizableTextarea id="conclusion" label="Заключение"   />
-
-
         <div class="flex justify-between items-center mt-4">
           <div >
             <label for="blood_pressure" class="block mb-2 text-sm font-medium text-gray-900"
