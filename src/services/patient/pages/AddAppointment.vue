@@ -118,7 +118,7 @@ function addPatientDataToFD(data) {
   data.append("weight", patientForm.patientData.weight);
 }
 
-// Сохранение patientForm в бд и редиарект на страничку Дашборда
+// Сохранение patientForm в бд и редиарект на страничку Дашборда TODO: редиарект на страничку "История обследования"
 async function handleAddAppointment() {
   console.log("INFO: handleAddAppointment")
   v$.value.$touch()

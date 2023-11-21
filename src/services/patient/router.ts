@@ -3,11 +3,11 @@ import MainPatientPage from '@/services/patient/pages/MainPatientPage.vue'
 import PatientList from '@/services/patient/pages/PatientList.vue'
 import PersonalAccountPage from '@/services/security/pages/PersonalAccountPage.vue'
 import PatientNavBar from '@/services/patient/parials/PatientNavBar.vue'
-import AddAppointment from '@/services/patient/pages/AddAppointment.vue'
 import AppointmentsHistory from '@/services/patient/pages/AppointmentsHistory.vue'
 import AppointmentHistory from '@/services/patient/pages/AppointmentHistory.vue'
 import MainAppointmentPage from '@/services/patient/pages/MainAppointmentPage.vue'
 import ViewAppointmentReport from '@/services/patient/pages/ViewAppointmentReport.vue'
+import AddAppointment from '@/services/patient/pages/AddAppointment.vue'
 
 export const PatientRoutes = [
   {
