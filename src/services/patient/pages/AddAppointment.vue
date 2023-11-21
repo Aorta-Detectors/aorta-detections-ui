@@ -12,30 +12,40 @@ import OMCComponent from '@/components/common/form/OMCComponent.vue'
 import { validateOMC } from '@/utils/validateOMC'
 import { usePatientStore } from '@/services/patient/store'
 import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const patientStore = usePatientStore()
 const { status, is_patient_exist, isLoadingOMC } = storeToRefs(patientStore)
 
+// т.к. сейчас у нас поле is_male это boolean
+const male = true
+const female = false
+
 const patientForm = reactive({
-  OMC: null,
-  FIO: null,
-  sex: null,
-  birth_date: null,
-  height: null,
-  weight: null,
+  examination_id: 1,
+
+  patientData: {
+    patient_id: null,
+    full_name: null,
+    is_male: null,
+    birth_date: null,
+    height: null,
+    weight: null,
+  },
 
   receptionsList: [
     {
       blood_pressure: null,
       pulse: null,
-      swelling: null,
-      complaints: null,
+      swell: null,
+      complains: null,
       diagnosis: null,
-      complications: null,
-      accompanying_illnesses: null,
-      anamnesis_life: null,
-      anamnesis_illness: null,
-      EKG_data: null
+      disease_complications: null,
+      comorbidities: null,
+      disease_anamnesis: null,
+      life_anamnesis: null,
+      echocardiogram_data: null
     }
   ]
 })
@@ -44,14 +54,14 @@ const addReception = () => {
   patientForm.receptionsList.push({
     blood_pressure: null,
     pulse: null,
-    swelling: null,
-    complaints: null,
+    swell: null,
+    complains: null,
     diagnosis: null,
-    complications: null,
-    accompanying_illnesses: null,
-    anamnesis_life: null,
-    anamnesis_illness: null,
-    EKG_data: null
+    disease_complications: null,
+    comorbidities: null,
+    disease_anamnesis: null,
+    life_anamnesis: null,
+    echocardiogram_data: null
   })
 }
 
@@ -63,16 +73,18 @@ const removeReception = (index) => {
 
 const rules = computed(() => ({
   patientForm: {
-    OMC: {
-      required: helpers.withMessage('Это обязательное поле', required),
-      numeric: helpers.withMessage('Допускаются только цифры', numeric),
-      name_validation: {
-        $validator: validateOMC,
-        $message: 'Длина 16 символов'
+    patientData: {
+      patient_id: {
+        required: helpers.withMessage('Это обязательное поле', required),
+        numeric: helpers.withMessage('Допускаются только цифры', numeric),
+        name_validation: {
+          $validator: validateOMC,
+          $message: 'Длина 16 символов'
+        }
+      },
+      full_name: {
+        required: helpers.withMessage('Это обязательное поле', required)
       }
-    },
-    FIO: {
-      required: helpers.withMessage('Это обязательное поле', required)
     }
   }
 }))
@@ -83,33 +95,68 @@ function handleDateSelection(date) {
   console.log(date)
 }
 
-// Сохранение patientForm в бд и редиарект на страничку Дашборда
+function addReceptionsListToFD(data, id) {
+  data.append("blood_pressure", patientForm.receptionsList[id].blood_pressure);
+  data.append("pulse", patientForm.receptionsList[id].pulse);
+  data.append("complains", patientForm.receptionsList[id].complains);
+  data.append("diagnosis", patientForm.receptionsList[id].diagnosis);
+  data.append("disease_complications", patientForm.receptionsList[id].disease_complications);
+  data.append("disease_anamnesis", patientForm.receptionsList[id].disease_anamnesis);
+  data.append("life_anamnesis", patientForm.receptionsList[id].life_anamnesis);
+  data.append("echocardiogram_data", patientForm.receptionsList[id].echocardiogram_data);
+  data.append("comorbidities", patientForm.receptionsList[id].comorbidities);
+  data.append("swell", patientForm.receptionsList[id].swell);
+}
+
+function addPatientDataToFD(data) {
+  // пока что посылам 1 замето patient_id, т.к. на бэке есть проблема с большим числом TODO
+  data.append("patient_id", 1);
+  data.append("full_name", patientForm.patientData.full_name);
+  data.append("is_male", patientForm.patientData.is_male);
+  data.append("birth_date", patientForm.patientData.birth_date.toISOString().split('T')[0]);
+  data.append("height", patientForm.patientData.height);
+  data.append("weight", patientForm.patientData.weight);
+}
+
+// Сохранение patientForm в бд и редиарект на страничку Дашборда TODO: редиарект на страничку "История обследования"
 async function handleAddAppointment() {
+  console.log("INFO: handleAddAppointment")
   v$.value.$touch()
   if (!v$.value.$error) {
-    await patientStore.createAppointment(patientForm)
+    console.log("INFO: sending appointment")
+    if (!is_patient_exist) {
+      console.log("INFO: patient exists")
+
+      let appointment = new FormData();
+
+      // пока что отправляется только первый элемент из receptionsList TODO
+      // receptionsList[0]
+      addReceptionsListToFD(appointment, 0)
+
+      console.log(appointment);
+      await patientStore.addAppointment(appointment, 1)
+    }
+    else {
+      console.log("INFO: patient does not exist")
+
+      let examination = new FormData();
+
+      // patientData
+      addPatientDataToFD(examination);
+
+      // пока что отправляется только первый элемент из receptionsList TODO
+      // receptionsList[0]
+      addReceptionsListToFD(examination, 0);
+
+      console.log(examination);
+      await patientStore.createExamination(examination)
+    }
     await router.push({ name: 'Dashboard' })
   }
 }
 
 // Проверка присутсвует ли уже пользователь с таким ОМС в бд на бэке
-async function handleOMCChange() {
-  v$.value.$touch()
-  if (!v$.value.$error) {
-    console.log('inside')
-    await patientStore.getPatient(patientForm.OMC)
-  }
-}
-
-watch(
-  () => patientForm.OMC,
-  (newOMC, oldValue) => {
-    console.log('new OMC from watch: newOMC ', newOMC)
-    console.log('new OMC from watch: oldValue ', oldValue)
-  }
-)
-
-async function testOMCRequest(OMCNumber) {
+async function handleOMCChange(OMCNumber) {
   await patientStore.getPatient(OMCNumber)
 }
 </script>
@@ -130,46 +177,46 @@ async function testOMCRequest(OMCNumber) {
         <div class="px-6 pt-6 space-y-4">
           <!-- Полис -->
           <OMCComponent
-            v-model="v$.patientForm.OMC.$model"
-            :errors-list="v$.patientForm.OMC.$errors"
-            @onCompleted="testOMCRequest"
+            v-model="v$.patientForm.patientData.patient_id.$model"
+            :errors-list="v$.patientForm.patientData.patient_id.$errors"
+            @onCompleted="handleOMCChange"
             :is-loading="isLoadingOMC"
           />
 
           <!-- ФИО -->
-          <div v-if="is_patient_exist">
-            <label for="FIO" class="block mb-2 text-sm font-medium text-gray-900"
+          <div v-if="!is_patient_exist">
+            <label for="patientData.full_name" class="block mb-2 text-sm font-medium text-gray-900"
               >Фамилия Имя Отчество:</label
             >
             <input
-              v-model="v$.patientForm.FIO.$model"
+              v-model="v$.patientForm.patientData.full_name.$model"
               type="text"
-              id="FIO"
+              id="patientData.full_name"
               class="ad-input"
               placeholder=""
             />
-            <ErrorComponent :errors="v$.patientForm.FIO.$errors" />
+            <ErrorComponent :errors="v$.patientForm.patientData.full_name.$errors" />
           </div>
         </div>
-        <div v-if="is_patient_exist" class="grid grid-cols-1 lg:grid-cols-2 gap-4 px-6">
+        <div v-if="!is_patient_exist" class="grid grid-cols-1 lg:grid-cols-2 gap-4 px-6">
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
             <!-- Пол -->
             <div>
-              <label for="sex" class="block mb-2 text-sm font-medium text-gray-900">Пол:</label>
-              <select id="sex" name="sex" v-model="patientForm.sex" class="ad-input">
-                <option value="male">Мужчина</option>
-                <option value="female">Женщина</option>
+              <label for="patientData.is_male" class="block mb-2 text-sm font-medium text-gray-900">Пол:</label>
+              <select id="patientData.is_male" name="patientData.is_male" v-model="patientForm.patientData.is_male" class="ad-input">
+                <option value=true>Мужчина</option>
+                <option value=false>Женщина</option>
               </select>
             </div>
 
             <div>
-              <label for="height" class="block mb-2 text-sm font-medium text-gray-900"
+              <label for="patientData.height" class="block mb-2 text-sm font-medium text-gray-900"
                 >Рост (в см):</label
               >
               <input
-                v-model="patientForm.height"
+                v-model="patientForm.patientData.height"
                 type="number"
-                id="height"
+                id="patientData.height"
                 class="ad-input"
                 min="0"
                 max="300"
@@ -178,33 +225,33 @@ async function testOMCRequest(OMCNumber) {
 
             <!-- Вес -->
             <div>
-              <label for="weight" class="block mb-2 text-sm font-medium text-gray-900"
+              <label for="patientData.weight" class="block mb-2 text-sm font-medium text-gray-900"
                 >Вес (в кг):</label
               >
               <input
-                v-model="patientForm.weight"
+                v-model="patientForm.patientData.weight"
                 type="number"
-                id="weight"
+                id="patientData.weight"
                 class="ad-input"
                 min="0"
                 max="700"
-                step="0.1"
+                step="1"
               />
             </div>
           </div>
           <!-- Дата Рождения -->
           <div>
-            <label for="birth_date" class="block mb-2 text-sm font-medium text-gray-900"
+            <label for="patientData.birth_date" class="block mb-2 text-sm font-medium text-gray-900"
               >Дата Рождения:</label
             >
             <VueDatePicker
               @update:model-value="handleDateSelection"
-              v-model="patientForm.birth_date"
+              v-model="patientForm.patientData.birth_date"
               locale="ru-Ru"
               format="dd/MM/yyyy"
               cancelText="Отменить"
               selectText="Выбрать"
-              id="birth_date"
+              id="patientData.birth_date"
               class="py-1.5"
               text-input
               :enable-time-picker="false"
@@ -247,13 +294,13 @@ async function testOMCRequest(OMCNumber) {
 
                   <!-- Пульс -->
                   <div>
-                    <label for="height" class="block mb-2 text-sm font-medium text-gray-900"
+                    <label for="pulse" class="block mb-2 text-sm font-medium text-gray-900"
                       >Пульс:</label
                     >
                     <input
                       v-model="reception.pulse"
                       type="number"
-                      id="height"
+                      id="pulse"
                       class="ad-input"
                       min="0"
                       max="250"
@@ -262,13 +309,13 @@ async function testOMCRequest(OMCNumber) {
 
                   <!-- Отечность -->
                   <div>
-                    <label for="swelling" class="block mb-2 text-sm font-medium text-gray-900"
+                    <label for="swell" class="block mb-2 text-sm font-medium text-gray-900"
                       >Отечность:</label
                     >
                     <input
-                      v-model="reception.swelling"
+                      v-model="reception.swell"
                       type="text"
-                      id="swelling"
+                      id="swell"
                       class="ad-input"
                     />
                   </div>
@@ -276,45 +323,45 @@ async function testOMCRequest(OMCNumber) {
               </div>
 
               <!-- Жалобы -->
-              <ResizableTextarea id="complaints" label="Жалобы:" v-model="reception.complaints" />
+              <ResizableTextarea id="complains" label="Жалобы:" v-model="reception.complains" />
 
               <!-- Диагноз -->
               <ResizableTextarea id="diagnosis" label="Диагноз:" v-model="reception.diagnosis" />
 
               <!-- Осложнения -->
               <ResizableTextarea
-                id="complications"
+                id="disease_complications"
                 label="Осложнения:"
-                v-model="reception.complications"
+                v-model="reception.disease_complications"
               />
 
               <!-- Сопуствующие заболевания -->
               <ResizableTextarea
-                id="accompanying_illnesses"
+                id="comorbidities"
                 label="Сопуствующие заболевания:"
-                v-model="reception.accompanying_illnesses"
+                v-model="reception.comorbidities"
               />
 
               <!-- Анамнез в течение жизни -->
               <ResizableTextarea
-                id="anamnesis_life"
+                id="life_anamnesis"
                 label="Анамнез в течение жизни:"
-                v-model="reception.anamnesis_life"
+                v-model="reception.life_anamnesis"
               />
 
               <!-- Анамнез в течение болезни -->
               <ResizableTextarea
-                id="anamnesis_illness"
+                id="disease_anamnesis"
                 label="Анамнез в течение болезни:"
-                v-model="reception.anamnesis_illness"
+                v-model="reception.disease_anamnesis"
               />
 
               <!-- Данные по ЭхоКТ -->
               <ResizableTextarea
                 class="col-span-2"
-                id="EKG_data"
+                id="echocardiogram_data"
                 label="Данные по ЭхоКТ:"
-                v-model="reception.EKG_data"
+                v-model="reception.echocardiogram_data"
               />
             </fieldset>
           </TransitionGroup>

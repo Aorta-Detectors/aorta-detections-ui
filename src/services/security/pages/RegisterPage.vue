@@ -11,6 +11,7 @@ import { useRouter } from 'vue-router'
 import SecurityRequests from '@/services/security/requests'
 import { handleError } from '@/utils/handleError'
 import Notification from '@/utils/Notification'
+import axios from 'axios'
 
 const userStore = useUserStore()
 const router = useRouter()
@@ -70,13 +71,13 @@ async function handleRegister() {
   if (!v$.value.$error) {
     isLoading.value = true
     try {
-      const t = await Notification.promise(SecurityRequests.registration(registerForm), true)
-      const { data, status } = t
+      await Notification.promise(SecurityRequests.registration(registerForm), true)
       await router.push({ name: 'LoginPage' })
-    } catch (e) {
-      const errorMessage = handleError(e)
-      console.error(errorMessage)
-      throw e
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        Notification.error(error.response.data?.detail)
+      }
+      throw e;
     } finally {
       isLoading.value = false
     }

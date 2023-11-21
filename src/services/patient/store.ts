@@ -6,26 +6,73 @@ import axios from 'axios';
 import Notification from '@/utils/Notification'
 import SecurityRequests from '@/services/security/requests'
 import { OMC_NOT_FOUND } from '@/constants/conts'
+import type { IExaminations, IRequestedExamination } from '@/services/patient/models/reception.interfaces'
 
+type TExaminationsState = {
+    is_patient_exist: boolean,
+    isLoading: boolean,
+    examinations: IExaminations
+}
 export const usePatientStore = defineStore('patientStore', {
-    state: () => ({
+    state: () : TExaminationsState => ({
         is_patient_exist: false,
-        isLoading: false
+        isLoading: false,
+        examinations: {
+            current_page: null,
+            objects_count_on_current_page: null,
+            page_total_count: null,
+            requested_examinations: []
+        }
     }),
     getters: {
-        patientExists(state) {
+        patientExists(state: TExaminationsState): boolean {
             return state.is_patient_exist;
         },
-        isLoadingOMC(state) {
+
+        isLoadingOMC(state: TExaminationsState): boolean {
             return state.isLoading;
+        },
+
+        totalPages(state: TExaminationsState): number {
+            return state.examinations.page_total_count;
+        },
+
+        currentPage(state: TExaminationsState): number {
+            return state.examinations.current_page;
+        },
+
+        examinationsList(state: TExaminationsState) : IRequestedExamination[] {
+            return state.examinations.requested_examinations
         }
     },
 
-
     actions: {
-        async createAppointment(payload: any) {
+        async getExaminationsList(page?: number, size?: number) {
+            this.isLoading = true
             try {
-                const { data, status } = await InfoRequests.create_appointment(payload);
+                const { data, status } = await InfoRequests.getExaminationsList({page, size});
+                this.examinations = data
+            }
+            catch (e) {
+                throw e;
+            }finally {
+                this.isLoading = false
+            }
+        },
+        async addAppointment(payload: any, examination_id: number) {
+            try {
+                const { data, status } = await InfoRequests.add_appointment(payload, examination_id);
+            }
+            catch (e) {
+                const errorMessage = handleError(e);
+                console.error(errorMessage);
+                throw e;
+            }
+        },
+
+        async createExamination(payload: any) {
+            try {
+                const { data, status } = await InfoRequests.create_examination(payload);
             }
             catch (e) {
                 const errorMessage = handleError(e);
@@ -47,11 +94,14 @@ export const usePatientStore = defineStore('patientStore', {
                     if(resp?.status === 404){
                         this.is_patient_exist = false
                         Notification.error(OMC_NOT_FOUND)
+                    } else {
+                        throw e;
                     }
-                  }
-                throw e;
+                } else {
+                    throw e;
+                }
             }finally {
-                this.isLoading =false
+                this.isLoading = false
             }
         },
     }
