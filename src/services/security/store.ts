@@ -2,6 +2,8 @@ import { defineStore } from 'pinia';
 import { handleError } from '@/utils/handleError';
 import SecurityRequests from '@/services/security/requests';
 import router from '@/router';
+import Notification from '@/utils/Notification'
+import axios, { type AxiosResponse } from 'axios'
 const userTokens = JSON.parse(localStorage.getItem('ad-token'));
 const initialUserLoginState = userTokens !== null
     ? {
@@ -24,9 +26,9 @@ export const useUserStore = defineStore('userStore', {
         }
     },
     actions: {
-        async login(payload) {
+        async login(payload): Promise<void> {
             try {
-                const t = await SecurityRequests.login(payload);
+                const t  = await SecurityRequests.login(payload);
                 const { data, status } = t;
                 if (status === 200) {
                     localStorage.setItem('ad-token', JSON.stringify({
@@ -37,10 +39,11 @@ export const useUserStore = defineStore('userStore', {
                 this.status.loggedIn = true;
                 await router.push({ name: 'Dashboard' });
             }
-            catch (e) {
+            catch (error) {
                 this.status.loggedIn = false;
-                const errorMessage = handleError(e);
-                console.error(errorMessage);
+                if (axios.isAxiosError(error) && error.response) {
+                    Notification.error(error.response.data?.detail)
+                }
                 throw e;
             }
         },
@@ -51,10 +54,12 @@ export const useUserStore = defineStore('userStore', {
                     this.user = data;
                 }
             }
-            catch (e) {
+            catch (error) {
                 const errorMessage = handleError(e);
-                console.error(errorMessage);
-                throw e;
+                if (axios.isAxiosError(error) && error.response && error.response.status !== 401) {
+                    Notification.error(errorMessage)
+                }
+                throw error;
             }
         },
         async logout() {
@@ -66,7 +71,7 @@ export const useUserStore = defineStore('userStore', {
             }
             catch (e) {
                 const errorMessage = handleError(e);
-                console.error(errorMessage);
+                Notification.error(errorMessage)
                 throw e;
             }
             finally {

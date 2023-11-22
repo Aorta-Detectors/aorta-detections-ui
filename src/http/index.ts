@@ -46,10 +46,8 @@ api.interceptors.response.use(
           return api.request(originalConfig)
         } catch (_error) {
           await router.push('/login')
-          Notification.error('Вы не авторизованы!');
           await SecurityRequests.logout()
           TokenService.removeUserTokens()
-
           return Promise.reject(_error)
         }
       }

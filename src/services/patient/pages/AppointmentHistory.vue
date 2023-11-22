@@ -56,6 +56,10 @@ function handleUpdateAppointment() {}
 <template>
   <div class="overflow-x-auto">
     <PageHeaderComponent :title="`Обследования №${id} от 10.10.2023`" >
+      <router-link :to="{name: 'ViewAppointmentReport', params: {id: id}}"  class="flex space-x-2 px-2 py-2 rounded-md bg-white border hover:bg-gray-50 outline-none">
+        <HeroIcon icon-type="outline" icon-name="DocumentChartBarIcon" class="block h-6 w-6" aria-hidden="true"/>
+        <span>Посмотреть отчет</span>
+      </router-link>
     </PageHeaderComponent>
 
     <div class="mt-8">
