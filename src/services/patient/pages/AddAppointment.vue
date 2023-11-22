@@ -9,6 +9,7 @@ import PageHeaderComponent from '@/components/common/PageHeaderComponent.vue'
 import HeroIcon from '@/components/common/HeroIcon.vue'
 import { computed, reactive, watch } from 'vue'
 import OMCComponent from '@/components/common/form/OMCComponent.vue'
+import FileDragComponent from '@/components/common/form/FileDragComponent.vue'
 import { validateOMC } from '@/utils/validateOMC'
 import { usePatientStore } from '@/services/patient/store'
 import { storeToRefs } from 'pinia'
@@ -45,9 +46,10 @@ const patientForm = reactive({
       comorbidities: null,
       disease_anamnesis: null,
       life_anamnesis: null,
-      echocardiogram_data: null
+      echocardiogram_data: null,
+      file: null
     }
-  ]
+  ], 
 })
 
 const addReception = () => {
@@ -61,7 +63,8 @@ const addReception = () => {
     comorbidities: null,
     disease_anamnesis: null,
     life_anamnesis: null,
-    echocardiogram_data: null
+    echocardiogram_data: null,
+    file: null
   })
 }
 
@@ -106,6 +109,7 @@ function addReceptionsListToFD(data, id) {
   data.append("echocardiogram_data", patientForm.receptionsList[id].echocardiogram_data);
   data.append("comorbidities", patientForm.receptionsList[id].comorbidities);
   data.append("swell", patientForm.receptionsList[id].swell);
+  data.append("file", patientForm.receptionsList[id].file);
 }
 
 function addPatientDataToFD(data) {
@@ -158,6 +162,12 @@ async function handleAddAppointment() {
 // Проверка присутсвует ли уже пользователь с таким ОМС в бд на бэке
 async function handleOMCChange(OMCNumber) {
   await patientStore.getPatient(OMCNumber)
+}
+
+// Передача файла
+function handleFileChanged(file) {
+  patientForm.receptionsList[0].file = file; // TODO
+  console.log('handleFileChanged:', patientForm.receptionsList[0].file);
 }
 </script>
 
@@ -362,6 +372,11 @@ async function handleOMCChange(OMCNumber) {
                 id="echocardiogram_data"
                 label="Данные по ЭхоКТ:"
                 v-model="reception.echocardiogram_data"
+              />
+
+              <!-- Файл -->
+              <FileDragComponent
+                @file_changed="handleFileChanged"
               />
             </fieldset>
           </TransitionGroup>
