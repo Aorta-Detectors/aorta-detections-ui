@@ -114,7 +114,7 @@ function addReceptionsListToFD(data, id) {
 
 function addPatientDataToFD(data) {
   // пока что посылам 1 замето patient_id, т.к. на бэке есть проблема с большим числом TODO
-  data.append("patient_id", 1);
+  data.append("patient_id", patientForm.patient_id);
   data.append("full_name", patientForm.patientData.full_name);
   data.append("is_male", patientForm.patientData.is_male);
   data.append("birth_date", patientForm.patientData.birth_date.toISOString().split('T')[0]);
@@ -161,7 +161,8 @@ async function handleAddAppointment() {
 
 // Проверка присутсвует ли уже пользователь с таким ОМС в бд на бэке
 async function handleOMCChange(OMCNumber) {
-  await patientStore.getPatient(OMCNumber)
+  patientForm.patient_id = OMCNumber
+  await patientStore.getPatient(OMCNumber?.toString())
 }
 
 // Передача файла
