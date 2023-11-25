@@ -6,6 +6,9 @@ export default class InfoRequests {
     static async getExaminationsList({page = 1, size = 30}) {
         return api.get(`${infoBasePath}/get_examinations?page=${page}&size=${size}`);
     }
+    static async getPatientsList({page = 1, size = 30}) {
+        return api.get(`${infoBasePath}/patients_page?page=${page}&size=${size}`);
+    }
     static async get_patient(patientOMS: number | string) {
         return api.get(`${infoBasePath}/get_patient?patient_id=${patientOMS}`);
     }
