@@ -1,61 +1,126 @@
 <script setup lang="ts">
 import PageHeaderComponent from '@/components/common/PageHeaderComponent.vue'
-import { computed, reactive } from 'vue'
+import { computed, onMounted, reactive, watch } from 'vue'
 import HeroIcon from '@/components/common/HeroIcon.vue'
 import { useRoute } from 'vue-router'
 import VueDatePicker from '@vuepic/vue-datepicker'
 import ResizableTextarea from '@/components/ResizableTextarea.vue'
-import ErrorComponent from '@/components/common/ErrorComponent.vue'
+import { storeToRefs } from 'pinia'
+import { usePatientStore } from '@/services/patient/store'
+import { convertToLocalTime } from '@/utils/useLocalTimeConverter'
+import InfoRequests from '@/services/patient/requests'
+import { handleError } from '@/utils/handleError'
+import Notification from '@/utils/Notification'
 
-const appointment = reactive({
-  id: 2,
-  OMC: '0000 0000 0000 0000',
-  FIO: ' Gondran дизайна и композиции читаемый текст мешает сосредоточиться',
-  sex: 'M',
-  date: '10.10.2023',
-  height:
-    'Давно выяснено, что при оценке дизайна и композиции читаемый текст мешает сосредоточиться. Lorem Ipsum используют потому',
-  complaints:
-    'что тот обеспечивает более или менее стандартное заполнение шаблона, а также реальное распределение букв и пробелов в абзацах, которое не получается при простой'
-})
+let appForm = reactive({
+  patient_id: null,
+  creator_id: null,
+  created_at: null,
+  examination_id: null,
+  patient: {
+    patient_id: null,
+    full_name: null,
+    birth_date: null,
+    is_male: null,
+    height: null,
+    weight: null
+  },
+  appointments: [
 
-const patientForm = reactive({
-  OMC: null,
-  FIO: null,
-
-  sex: null,
-  birth_date: null,
-  height: null,
-  weight: null,
-
-  blood_pressure: null,
-  pulse: null,
-  swelling: null,
-
-  complaints: null,
-  diagnosis: null,
-  complications: null,
-  accompanying_illnesses: null,
-
-  anamnesis_life: null,
-  anamnesis_illness: null,
-  EKG_data: null
+  ]
 })
 
 const route = useRoute()
-
+const store = usePatientStore()
+const { examination } = storeToRefs(store)
 const id = computed(() => route?.params?.id)
+
+onMounted(() => {
+  if (id.value) {
+    store.getExaminationById(id.value)
+  }
+
+})
+
+watch(()=>examination.value, (newExamination)=> {
+  if(newExamination){
+    appForm = {
+      ...newExamination,
+      appointments: [...newExamination.appointments]
+    }
+  }
+}, {immediate: true, deep: true} )
+
+const addNewAppointment = () => {
+  appForm.appointments.push({
+    user_id: null,
+    examination_id: null,
+    appointment_time: null,
+    blood_pressure: null,
+    pulse: null,
+    swell: null,
+    complains: null,
+    diagnosis: null,
+    disease_complications: null,
+    comorbidities: null,
+    disease_anamnesis: null,
+    life_anamnesis: null,
+    echocardiogram_data: null,
+    is_ready: false,
+    appointment_id: 0
+  })
+}
+
+const removeReception = (index) => {
+  if (appForm.appointments.length > 1) {
+    appForm.appointments.splice(index, 1)
+  }
+}
+
+const  handleSubmitAppointment = async () => {
+
+  // TODO: add form  validations
+
+  let lastAppointment = appForm.appointments.pop()
+  let fd = new FormData
+  
+  if(lastAppointment){
+    fd.append("blood_pressure", lastAppointment.blood_pressure);
+    fd.append("pulse", lastAppointment.pulse);
+    fd.append("complains", lastAppointment.complains);
+    fd.append("diagnosis", lastAppointment.diagnosis);
+    fd.append("disease_complications", lastAppointment.disease_complications);
+    fd.append("disease_anamnesis", lastAppointment.disease_anamnesis);
+    fd.append("life_anamnesis", lastAppointment.life_anamnesis);
+    fd.append("echocardiogram_data", lastAppointment.echocardiogram_data);
+    fd.append("comorbidities", lastAppointment.comorbidities);
+    fd.append("swell", lastAppointment.swell);
+
+    // TODO: validate and send
+    try {
+      const { data, status } = await  Notification.promise(InfoRequests.add_appointment(fd, id.value))
+      if (id.value) {
+        await store.getExaminationById(id.value)
+      }
+    }
+    catch (e) {
+      const errorMessage = handleError(e);
+      console.error(errorMessage);
+      throw e;
+    }
+
+  }
+}
 
 function handleDateSelection(date) {
   console.log(date)
 }
 
-function handleUpdateAppointment() {}
 </script>
 
 <template>
   <div class="overflow-x-auto">
-    <PageHeaderComponent :title="`Обследования №${id} от 10.10.2023`" >
+    <PageHeaderComponent :title="`Обследования №${examination?.examination_id} от ${convertToLocalTime(examination?.created_at)}`" >
       <router-link :to="{name: 'ViewAppointmentReport', params: {id: id}}"  class="flex space-x-2 px-2 py-2 rounded-md bg-white border hover:bg-gray-50 outline-none">
         <HeroIcon icon-type="outline" icon-name="DocumentChartBarIcon" class="block h-6 w-6" aria-hidden="true"/>
         <span>Посмотреть отчет</span>
@@ -65,7 +130,7 @@ function handleUpdateAppointment() {}
     <div class="mt-8">
       <div class="w-full mt-10 border p-6 bg-white rounded-2xl">
         <form
-          @submit.prevent="handleUpdateAppointment"
+          @submit.prevent="handleSubmitAppointment"
           class="flex flex-col space-y-8"
           autocomplete="off"
         >
@@ -74,7 +139,7 @@ function handleUpdateAppointment() {}
             <div>
               <label for="OMC" class="block mb-2 text-sm text-gray-900">Номер полиса ОМС:</label>
               <input
-                v-model="patientForm.OMC"
+                v-model='appForm.patient.patient_id'
                 type="text"
                 id="OMC"
                 class="ad-input"
@@ -88,7 +153,7 @@ function handleUpdateAppointment() {}
                 >Фамилия Имя Отчество:</label
               >
               <input
-                v-model="patientForm.FIO"
+                v-model='appForm.patient.full_name'
                 type="text"
                 id="FIO"
                 class="ad-input"
@@ -100,9 +165,9 @@ function handleUpdateAppointment() {}
               <!-- Пол -->
               <div>
                 <label for="sex" class="block mb-2 text-sm text-gray-900">Пол:</label>
-                <select id="sex" name="sex" v-model="patientForm.sex" class="ad-input">
-                  <option value="male">Мужчина</option>
-                  <option value="female">Женщина</option>
+                <select id="sex" name="sex" v-model='appForm.patient.is_male'  class="ad-input">
+                  <option :value="true">Мужчина</option>
+                  <option :value="false">Женщина</option>
                 </select>
               </div>
 
@@ -110,7 +175,7 @@ function handleUpdateAppointment() {}
               <div>
                 <label for="height" class="block mb-2 text-sm text-gray-900">Рост (в см):</label>
                 <input
-                  v-model="patientForm.height"
+                  v-model='appForm.patient.height'
                   type="number"
                   id="height"
                   class="ad-input"
@@ -123,8 +188,8 @@ function handleUpdateAppointment() {}
               <div>
                 <label for="weight" class="block mb-2 text-sm text-gray-900">Вес (в кг):</label>
                 <input
-                  v-model="patientForm.weight"
                   type="number"
+                  v-model='appForm.patient.weight'
                   id="weight"
                   class="ad-input"
                   min="0"
@@ -140,7 +205,7 @@ function handleUpdateAppointment() {}
               >
               <VueDatePicker
                 @update:model-value="handleDateSelection"
-                v-model="patientForm.birth_date"
+                v-model='appForm.patient.birth_date'
                 locale="ru-Ru"
                 format="dd/MM/yyyy"
                 cancelText="Отменить"
@@ -153,85 +218,113 @@ function handleUpdateAppointment() {}
                 now-button-label="Сегодня"
               />
             </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-              <!-- Кровяное давление -->
-              <div>
-                <label for="blood_pressure" class="block mb-2 text-sm text-gray-900"
-                  >Кровяное давление:</label
-                >
-                <input
-                  v-model="patientForm.blood_pressure"
-                  type="text"
-                  id="blood_pressure"
-                  class="ad-input"
-                />
-              </div>
-
-              <!-- Пульс -->
-              <div>
-                <label for="height" class="block mb-2 text-sm text-gray-900">Пульс:</label>
-                <input
-                  v-model="patientForm.pulse"
-                  type="number"
-                  id="height"
-                  class="ad-input"
-                  min="0"
-                  max="250"
-                />
-              </div>
             </div>
 
-            <!-- Отечность -->
-            <div>
-              <label for="swelling" class="block mb-2 text-sm text-gray-900">Отечность:</label>
-              <input v-model="patientForm.swelling" type="text" id="swelling" class="ad-input" />
+          <div v-if='examination && examination.appointments.length' class='space-y-3 flex flex-col'>
+
+            <div v-for="(appointment, index) in appForm.appointments" :key='appointment?.appointment_id' class='mb-4 border p-6 rounded-xl relative'>
+              <!--   TODO: just for demo (do refactoring of appForm?.appointments?.length > 1 && appointment_id === 0 ) -->
+              <button
+                v-if="appForm?.appointments?.length > 1"
+                @click.prevent="removeReception(index)"
+                class="absolute text-red-500 transition-all hover:text-white hover:bg-red-500 -top-6 -right-4 bg-white border rounded-full p-2"
+              >
+                <HeroIcon icon-type="outline" icon-name="XMarkIcon" class="h-5 w-5" />
+              </button>
+              <details class="group" open>
+                <summary class="cursor-pointer flex justify-between items-center">
+                  <span>{{`Прием  №${appointment?.appointment_id}`}}</span>
+                  <span class='text-gray-400'>{{`от ${convertToLocalTime(examination?.created_at)}`}}</span>
+                </summary>
+                <div class='space-y-4 py-5'>
+                  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <!-- Кровяное давление -->
+                    <div>
+                      <label for="blood_pressure" class="block mb-2 text-sm text-gray-900"
+                      >Кровяное давление:</label
+                      >
+                      <input
+                        v-model='appointment.blood_pressure'
+                        type="text"
+                        id="blood_pressure"
+                        class="ad-input"
+                      />
+                    </div>
+
+                    <!-- Пульс -->
+                    <div>
+                      <label for="height" class="block mb-2 text-sm text-gray-900">Пульс:</label>
+                      <input
+                        type="number"
+                        v-model='appointment.pulse'
+                        id="height"
+                        class="ad-input"
+                        min="0"
+                        max="250"
+                      />
+                    </div>
+
+
+                    <!-- Отечность -->
+                    <div>
+                      <label for="swelling" class="block mb-2 text-sm text-gray-900">Отечность:</label>
+                      <input v-model='appointment.swell' type="text" id="swelling" class="ad-input" />
+                    </div>
+                  </div>
+                  <div class="grid lg:grid-cols-2 grid-cols-1 gap-4">
+                    <!-- Жалобы -->
+                    <ResizableTextarea id="complaints" label="Жалобы:" v-model='appointment.complains'  />
+
+                    <!-- Диагноз -->
+                    <ResizableTextarea id="diagnosis" label="Диагноз:" v-model='appointment.diagnosis' />
+
+                    <!-- Осложнения -->
+                    <ResizableTextarea
+                      id="complications"
+                      label="Осложнения:"
+                      v-model='appointment.disease_complications'
+                    />
+
+                    <!-- Сопуствующие заболевания -->
+                    <ResizableTextarea
+                      id="accompanying_illnesses"
+                      label="Сопуствующие заболевания:"
+                    />
+
+                    <!-- Анамнез в течение жизни -->
+                    <ResizableTextarea
+                      id="anamnesis_life"
+                      label="Анамнез в течение жизни:"
+                      v-model='appointment.disease_anamnesis'
+                    />
+
+                    <!-- Анамнез в течение болезни -->
+                    <ResizableTextarea
+                      id="anamnesis_illness"
+                      v-model='appointment.life_anamnesis'
+                      label="Анамнез в течение болезни:"
+                    />
+
+                    <!-- Данные по ЭхоКТ -->
+                    <ResizableTextarea
+                      id="EKG_data"
+                      v-model='appointment.echocardiogram_data'
+                      label="Данные по ЭхоКТ:"
+                    />
+                  </div>
+                </div>
+              </details>
             </div>
 
-            <!-- Жалобы -->
-            <ResizableTextarea id="complaints" label="Жалобы:" v-model="patientForm.complaints" />
+            <button @click.prevent="addNewAppointment" class="flex space-x-2 items-center">
+              <HeroIcon icon-type="outline" icon-name="PlusCircleIcon" class="h-5 w-5" />
+              <span>Добавить прием</span>
+            </button>
+          </div>
 
-            <!-- Диагноз -->
-            <ResizableTextarea id="diagnosis" label="Диагноз:" v-model="patientForm.diagnosis" />
-
-            <!-- Осложнения -->
-            <ResizableTextarea
-              id="complications"
-              label="Осложнения:"
-              v-model="patientForm.complications"
-            />
-
-            <!-- Сопуствующие заболевания -->
-            <ResizableTextarea
-              id="accompanying_illnesses"
-              label="Сопуствующие заболевания:"
-              v-model="patientForm.accompanying_illnesses"
-            />
-
-            <!-- Анамнез в течение жизни -->
-            <ResizableTextarea
-              id="anamnesis_life"
-              label="Анамнез в течение жизни:"
-              v-model="patientForm.anamnesis_life"
-            />
-
-            <!-- Анамнез в течение болезни -->
-            <ResizableTextarea
-              id="anamnesis_illness"
-              label="Анамнез в течение болезни:"
-              v-model="patientForm.anamnesis_illness"
-            />
-
-            <!-- Данные по ЭхоКТ -->
-            <ResizableTextarea
-              id="EKG_data"
-              label="Данные по ЭхоКТ:"
-              v-model="patientForm.EKG_data"
-            />
-            <div class="flex justify-end items-center">
-              <router-link :to="{ name: 'AppointmentsHistory' }" class="mr-4">Отменить</router-link>
-              <button type="submit" class="ad-primary-btn">Сохранить</button>
-            </div>
+          <div class="flex justify-end items-center">
+            <router-link :to="{ name: 'AppointmentsHistory' }" class="mr-4">Отменить</router-link>
+            <button type="submit" class="ad-primary-btn">Сохранить</button>
           </div>
         </form>
       </div>
@@ -241,7 +334,9 @@ function handleUpdateAppointment() {}
           @submit.prevent
           class="bg-white col-span-2 text-gray-300 group border hover:border-2 duration-300 hover:cursor-pointer transition-all relative border-dashed border-theme-primary0 h-[400px] rounded-xl flex justify-center items-center w-full"
         >
-          <div class="flex items-center justify-center flex-col space-y-2 group-hover:text-theme-primary10">
+          <div
+            class="flex items-center justify-center flex-col space-y-2 group-hover:text-theme-primary10"
+          >
             <HeroIcon icon-type="outline" icon-name="ArrowUpTrayIcon" />
             <span>Загрузить файлы</span>
           </div>

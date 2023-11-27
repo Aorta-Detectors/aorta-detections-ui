@@ -5,14 +5,22 @@ import router from '@/router';
 import axios from 'axios';
 import Notification from '@/utils/Notification'
 import SecurityRequests from '@/services/security/requests'
-import { OMC_NOT_FOUND } from '@/constants/conts'
-import type { IExaminations, IRequestedExamination, IPatients, IRequestedPatient } from '@/services/patient/models/reception.interfaces'
+import { APPOINTMENT_NOT_FOUND, OMC_NOT_FOUND } from '@/constants/conts'
+import type {
+    IExaminations,
+    IRequestedExamination,
+    IPatients,
+    IRequestedPatient,
+    IExamination
+} from '@/services/patient/models/reception.interfaces'
+import { and } from '@vuelidate/validators'
 
 type TState = {
     is_patient_exist: boolean,
     isLoading: boolean,
     examinations: IExaminations, 
-    patients: IPatients
+    patients: IPatients,
+    examination: IExamination | null
 }
 export const usePatientStore = defineStore('patientStore', {
     state: () : TState => ({
@@ -29,9 +37,45 @@ export const usePatientStore = defineStore('patientStore', {
             objects_count_on_current_page: null,
             page_total_count: null,
             requested_patients: []
+        },
+        examination: {
+            patient_id: null,
+            creator_id: null,
+            created_at: null,
+            examination_id: null,
+            patient: {
+                patient_id: null,
+                full_name: null,
+                birth_date: null,
+                is_male: null,
+                height: null,
+                weight: null
+            },
+            appointments: [
+                {
+                    user_id: null,
+                    examination_id: null,
+                    appointment_time: null,
+                    blood_pressure: null,
+                    pulse: null,
+                    swell: null,
+                    complains: null,
+                    diagnosis: null,
+                    disease_complications: null,
+                    comorbidities: null,
+                    disease_anamnesis: null,
+                    life_anamnesis: null,
+                    echocardiogram_data: null,
+                    is_ready: false,
+                    appointment_id: 0
+                }
+            ]
         }
     }),
     getters: {
+        currentExamination(state: TState): IExamination {
+            return state.examination;
+        },
         patientExists(state: TState): boolean {
             return state.is_patient_exist;
         },
@@ -78,6 +122,27 @@ export const usePatientStore = defineStore('patientStore', {
                 this.isLoading = false
             }
         },
+        async getExaminationById(id) {
+            this.isLoading = true
+            try {
+                const { data, status } = await InfoRequests.getExaminationById(id);
+                this.examination =  data
+            }
+            catch (e) {
+                if (axios.isAxiosError(e) && e.response) {
+                    let resp = e?.response
+                    if(resp?.status === 404){
+                        Notification.error(APPOINTMENT_NOT_FOUND)
+                       await router.push({name: 'AppointmentsHistory'})
+                    }
+                }
+                throw e;
+            }finally {
+                this.isLoading = false
+            }
+        },
+
+
         async getPatientsList(page?: number, size?: number) {
             this.isLoading = true
             try {
@@ -124,12 +189,9 @@ export const usePatientStore = defineStore('patientStore', {
                     if(resp?.status === 404){
                         this.is_patient_exist = false
                         Notification.error(OMC_NOT_FOUND)
-                    } else {
-                        throw e;
                     }
-                } else {
-                    throw e;
                 }
+                throw e;
             }finally {
                 this.isLoading = false
             }
