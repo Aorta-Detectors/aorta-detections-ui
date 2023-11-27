@@ -44,7 +44,7 @@ export const useUserStore = defineStore('userStore', {
                 if (axios.isAxiosError(error) && error.response) {
                     Notification.error(error.response.data?.detail)
                 }
-                throw e;
+                throw error;
             }
         },
         async getMe() {
@@ -55,10 +55,9 @@ export const useUserStore = defineStore('userStore', {
                 }
             }
             catch (error) {
-                const errorMessage = handleError(e);
-                if (axios.isAxiosError(error) && error.response && error.response.status !== 401) {
-                    Notification.error(errorMessage)
-                }
+                localStorage.removeItem('ad-token');
+                this.user = {};
+                await router.push({ name: 'LoginPage' });
                 throw error;
             }
         },

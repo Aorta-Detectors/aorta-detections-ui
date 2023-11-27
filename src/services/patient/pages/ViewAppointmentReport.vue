@@ -6,7 +6,6 @@ import { useRoute } from 'vue-router'
 import ResizableTextarea from '@/components/ResizableTextarea.vue'
 import jsPDF from 'jspdf';
 
-
 const appointment = reactive({
   id: 2,
   OMC: '0000 0000 0000 0000',
@@ -55,55 +54,87 @@ function handleDateSelection(date) {
 function handleUpdateAppointment() {}
 
 const content = ref(null)
+const initialCtY = 150
+const ctData = [
+  {
+    y:initialCtY,
+    value: 'Аортальный клапан трехстворчатый'
+  },
+  {
+    y:initialCtY + 10,
+    value: 'Диаметр ФК АК 24,2*33,5 мМ'
+  },
+  {
+    y:initialCtY + 20,
+    value: 'Диаметр синусов Вальсальвы 45,6*45,8 мм'
+  },
+  {
+    y:initialCtY + 30,
+    value: 'Диаметр тубулярной части вд 48,2*48,4 Мм'
+  }
+]
 
 function addHeader(pdf) {
   pdf.setFontSize(20);
-  pdf.text('Medical Report', 20, 20);
-  pdf.line(20, 25, 190, 25); // Horizontal line under the title
+  pdf.text('Отчет', 20, 20);
+  pdf.line(20, 25, 190, 25);
 }
+
+
 
 const img = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRw1J6q6gTxhkpucX2Vw6QqITvYk2UPs-weH2aLZKKY1AH1tSp8-oqZ2_MZsW2HT7wUDk4&usqp=CAU'
 function generatePDF() {
-  // Create a new instance of jsPDF
-  // Create a new instance of jsPDF
   const pdf = new jsPDF();
-
-  // Add content to the PDF
+  pdf.setFont('arial-unicode-ms.ttf', 'arial-unicode-ms', 'normal');
   addReportDetails(pdf);
   addPatientInfo(pdf);
+  /*addDiagnosis(pdf);
+  addCtData(pdf)
   addAorticValveMeasurements(pdf);
-  addAorticImages(pdf);
+  addAorticImages(pdf);*/
 
-  // Save the PDF with a specific name
   pdf.save('medical-report.pdf');
 }
 
 function addReportDetails(pdf) {
   pdf.setFontSize(18);
-  pdf.text('Medical Report', 20, 20);
-  pdf.line(20, 25, 190, 25); // Horizontal line under the title
+  pdf.text('Отчет', 20, 20);
+  pdf.line(20, 25, 190, 25);
 }
 
 function addPatientInfo(pdf) {
-  pdf.setFontSize(16);
-  pdf.text('Patient Information', 20, 40);
-  pdf.text('Name: John Doe', 20, 50);
-  pdf.text('Date of Birth: January 1, 1980', 20, 60);
-  pdf.text('Gender: Male', 20, 70);
-  pdf.text('Address: 123 Medical St, Cityville', 20, 80);
+  pdf.setFontSize(14);
+  pdf.text('Информация о пациенте', 20, 40);
+  pdf.text('ФИО: John Doe', 20, 50);
+  pdf.text('Возраст: January 1, 1980', 20, 60);
+  pdf.text('Пол: Male', 20, 70);
+  pdf.text('Отчет №3 от 10.10.2023', 20, 80);
+  pdf.text('№ обследования: 4111154552215222 ', 20, 100);
 }
+function addDiagnosis(pdf) {
+  pdf.setFontSize(14);
+  pdf.text('Диагноз', 20, 120);
+  pdf.text('Дилатация восходящего отдела и аневризма брюшной аорты. Выраженная аортальная недостаточность', 20, 130);
+}
+function addCtData(pdf) {
+  pdf.setFontSize(14);
+  ctData.forEach(el => {
+    pdf.text(el.value, 20, el.y);
+  })
+}
+
 
 function addAorticValveMeasurements(pdf) {
   pdf.setFontSize(16);
-  pdf.text('Aortic Valve Measurements', 20, 100);
-  pdf.text('Aortic Diameter: 3.2 cm', 20, 110);
-  pdf.text('Aortic Valve Area: 2.0 cm²', 20, 120);
-  pdf.text('Peak Aortic Velocity: 1.5 m/s', 20, 130);
+  pdf.text('Данные КТ', 20, 200);
+  pdf.text('Aortic Diameter: 3.2 cm', 20, 210);
+  pdf.text('Aortic Valve Area: 2.0 cm²', 20, 220);
+  pdf.text('Peak Aortic Velocity: 1.5 m/s', 20, 330);
 }
 
 function addAorticImages(pdf) {
-  const aorticImage1 = img; // Replace with the actual path to your image
-  const aorticImage2 = img; // Replace with the actual path to your image
+  const aorticImage1 = img;
+  const aorticImage2 = img;
 
   pdf.addImage(aorticImage1, 'JPEG', 20, 150, 80, 60);
   pdf.addImage(aorticImage2, 'JPEG', 110, 150, 80, 60);
@@ -381,4 +412,6 @@ function addAorticImages(pdf) {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+
+</style>
