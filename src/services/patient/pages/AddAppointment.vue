@@ -9,6 +9,7 @@ import PageHeaderComponent from '@/components/common/PageHeaderComponent.vue'
 import HeroIcon from '@/components/common/HeroIcon.vue'
 import { computed, reactive, watch } from 'vue'
 import OMCComponent from '@/components/common/form/OMCComponent.vue'
+import FileDragComponent from '@/components/common/form/FileDragComponent.vue'
 import { validateOMC } from '@/utils/validateOMC'
 import { usePatientStore } from '@/services/patient/store'
 import { storeToRefs } from 'pinia'
@@ -17,6 +18,7 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const patientStore = usePatientStore()
 const { status, is_patient_exist, isLoadingOMC } = storeToRefs(patientStore)
+let isOMCFull = false
 
 // т.к. сейчас у нас поле is_male это boolean
 const male = true
@@ -45,9 +47,10 @@ const patientForm = reactive({
       comorbidities: null,
       disease_anamnesis: null,
       life_anamnesis: null,
-      echocardiogram_data: null
+      echocardiogram_data: null,
+      file: null
     }
-  ]
+  ], 
 })
 
 const addReception = () => {
@@ -61,7 +64,8 @@ const addReception = () => {
     comorbidities: null,
     disease_anamnesis: null,
     life_anamnesis: null,
-    echocardiogram_data: null
+    echocardiogram_data: null,
+    file: null
   })
 }
 
@@ -83,7 +87,9 @@ const rules = computed(() => ({
         }
       },
       full_name: {
-        required: helpers.withMessage('Это обязательное поле', required)
+        ...(!is_patient_exist.value && {
+          required: helpers.withMessage('Это обязательное поле', required)
+        })
       }
     }
   }
@@ -106,11 +112,11 @@ function addReceptionsListToFD(data, id) {
   data.append("echocardiogram_data", patientForm.receptionsList[id].echocardiogram_data);
   data.append("comorbidities", patientForm.receptionsList[id].comorbidities);
   data.append("swell", patientForm.receptionsList[id].swell);
+  data.append("file", patientForm.receptionsList[id].file);
 }
 
 function addPatientDataToFD(data) {
-  // пока что посылам 1 замето patient_id, т.к. на бэке есть проблема с большим числом TODO
-  data.append("patient_id", 1);
+  data.append("patient_id", patientForm.patient_id);
   data.append("full_name", patientForm.patientData.full_name);
   data.append("is_male", patientForm.patientData.is_male);
   data.append("birth_date", patientForm.patientData.birth_date.toISOString().split('T')[0]);
@@ -121,10 +127,11 @@ function addPatientDataToFD(data) {
 // Сохранение patientForm в бд и редиарект на страничку Дашборда TODO: редиарект на страничку "История обследования"
 async function handleAddAppointment() {
   console.log("INFO: handleAddAppointment")
+  console.log("is_patient_exist = ", is_patient_exist.value)
   v$.value.$touch()
   if (!v$.value.$error) {
     console.log("INFO: sending appointment")
-    if (!is_patient_exist) {
+    if (is_patient_exist.value) {
       console.log("INFO: patient exists")
 
       let appointment = new FormData();
@@ -157,7 +164,18 @@ async function handleAddAppointment() {
 
 // Проверка присутсвует ли уже пользователь с таким ОМС в бд на бэке
 async function handleOMCChange(OMCNumber) {
-  await patientStore.getPatient(OMCNumber)
+  patientForm.patient_id = OMCNumber
+  await patientStore.getPatient(OMCNumber?.toString())
+}
+
+function handleOMCAccept(OMC) {
+  isOMCFull = OMC.length === 16
+}
+
+// Передача файла
+function handleFileChanged(file) {
+  patientForm.receptionsList[0].file = file; // TODO
+  console.log('handleFileChanged:', patientForm.receptionsList[0].file);
 }
 </script>
 
@@ -179,12 +197,13 @@ async function handleOMCChange(OMCNumber) {
           <OMCComponent
             v-model="v$.patientForm.patientData.patient_id.$model"
             :errors-list="v$.patientForm.patientData.patient_id.$errors"
+            @onAccept="handleOMCAccept"
             @onCompleted="handleOMCChange"
             :is-loading="isLoadingOMC"
           />
 
           <!-- ФИО -->
-          <div v-if="!is_patient_exist">
+          <div v-if="!is_patient_exist || !isOMCFull">
             <label for="patientData.full_name" class="block mb-2 text-sm font-medium text-gray-900"
               >Фамилия Имя Отчество:</label
             >
@@ -198,7 +217,7 @@ async function handleOMCChange(OMCNumber) {
             <ErrorComponent :errors="v$.patientForm.patientData.full_name.$errors" />
           </div>
         </div>
-        <div v-if="!is_patient_exist" class="grid grid-cols-1 lg:grid-cols-2 gap-4 px-6">
+        <div v-if="!is_patient_exist || !isOMCFull" class="grid grid-cols-1 lg:grid-cols-2 gap-4 px-6">
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
             <!-- Пол -->
             <div>
@@ -362,6 +381,11 @@ async function handleOMCChange(OMCNumber) {
                 id="echocardiogram_data"
                 label="Данные по ЭхоКТ:"
                 v-model="reception.echocardiogram_data"
+              />
+
+              <!-- Файл -->
+              <FileDragComponent
+                @file_changed="handleFileChanged"
               />
             </fieldset>
           </TransitionGroup>

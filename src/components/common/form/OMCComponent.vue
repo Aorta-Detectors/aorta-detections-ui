@@ -57,12 +57,13 @@ export default {
     }
   },
 
-  emits: ['update:modelValue', 'onCompleted'],
+  emits: ['update:modelValue', 'onCompleted', 'onAccept'],
 
   methods: {
     onAccept(e) {
       const maskRef = e.detail
       this.value = maskRef.value
+      this.$emit('onAccept', maskRef.unmaskedValue)
       //TODO: if not complete event
     },
     onComplete(e) {

@@ -6,15 +6,16 @@ import axios from 'axios';
 import Notification from '@/utils/Notification'
 import SecurityRequests from '@/services/security/requests'
 import { OMC_NOT_FOUND } from '@/constants/conts'
-import type { IExaminations, IRequestedExamination } from '@/services/patient/models/reception.interfaces'
+import type { IExaminations, IRequestedExamination, IPatients, IRequestedPatient } from '@/services/patient/models/reception.interfaces'
 
-type TExaminationsState = {
+type TState = {
     is_patient_exist: boolean,
     isLoading: boolean,
-    examinations: IExaminations
+    examinations: IExaminations, 
+    patients: IPatients
 }
 export const usePatientStore = defineStore('patientStore', {
-    state: () : TExaminationsState => ({
+    state: () : TState => ({
         is_patient_exist: false,
         isLoading: false,
         examinations: {
@@ -22,27 +23,45 @@ export const usePatientStore = defineStore('patientStore', {
             objects_count_on_current_page: null,
             page_total_count: null,
             requested_examinations: []
+        },
+        patients: {
+            current_page: null,
+            objects_count_on_current_page: null,
+            page_total_count: null,
+            requested_patients: []
         }
     }),
     getters: {
-        patientExists(state: TExaminationsState): boolean {
+        patientExists(state: TState): boolean {
             return state.is_patient_exist;
         },
 
-        isLoadingOMC(state: TExaminationsState): boolean {
+        isLoadingOMC(state: TState): boolean {
             return state.isLoading;
         },
 
-        totalPages(state: TExaminationsState): number {
+        totalPages(state: TState): number {
             return state.examinations.page_total_count;
         },
 
-        currentPage(state: TExaminationsState): number {
+        currentPage(state: TState): number {
             return state.examinations.current_page;
         },
 
-        examinationsList(state: TExaminationsState) : IRequestedExamination[] {
+        examinationsList(state: TState) : IRequestedExamination[] {
             return state.examinations.requested_examinations
+        }, 
+
+        totalPatientsPages(state: TState): number {
+            return state.patients.page_total_count;
+        },
+
+        currentPatientsPage(state: TState): number {
+            return state.patients.current_page;
+        },
+
+        patientsList(state: TState) : IRequestedPatient[] {
+            return state.patients.requested_patients
         }
     },
 
@@ -52,6 +71,18 @@ export const usePatientStore = defineStore('patientStore', {
             try {
                 const { data, status } = await InfoRequests.getExaminationsList({page, size});
                 this.examinations = data
+            }
+            catch (e) {
+                throw e;
+            }finally {
+                this.isLoading = false
+            }
+        },
+        async getPatientsList(page?: number, size?: number) {
+            this.isLoading = true
+            try {
+                const { data, status } = await InfoRequests.getPatientsList({page, size});
+                this.patients = data
             }
             catch (e) {
                 throw e;
@@ -89,7 +120,6 @@ export const usePatientStore = defineStore('patientStore', {
             }
             catch (e) {
                 if (axios.isAxiosError(e) && e.response) {
-                    console.log(e)
                     let resp = e?.response
                     if(resp?.status === 404){
                         this.is_patient_exist = false
