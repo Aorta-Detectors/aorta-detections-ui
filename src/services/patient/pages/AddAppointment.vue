@@ -132,7 +132,7 @@ async function handleAddAppointment() {
       // пока что отправляется только первый элемент из receptionsList TODO
       // receptionsList[0]
       addReceptionsListToFD(appointment, 0)
-      await patientStore.addAppointment(appointment, 1)
+      await patientStore.addAppointment(appointment, patientForm.examination_id)
     }
     else {
       let examination = new FormData();
@@ -262,6 +262,18 @@ function handleOMCAccept(OMC) {
             />
           </div>
         </div>
+          <!-- examination_id -->
+          <div v-if="is_patient_exist && isOMCFull" class="grid grid-cols-1 lg:grid-cols-1 gap-4 px-6">
+              <label for="patientData.examination_id" class="block mb-2 text-sm font-medium text-gray-900"
+                >examination_id:</label
+              >
+              <input
+                v-model="patientForm.examination_id"
+                type="number"
+                id="patientData.examination_id"
+                class="ad-input"
+              />
+            </div>
 
         <fieldset class="rounded-md space-y-4 px-6 w-full">
           <TransitionGroup name="list" tag="ul">
