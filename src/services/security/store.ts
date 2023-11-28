@@ -37,7 +37,7 @@ export const useUserStore = defineStore('userStore', {
                     }));
                 }
                 this.status.loggedIn = true;
-                await router.push({ name: 'Dashboard' });
+                await router.push({ name: 'AppointmentsHistory' });
             }
             catch (error) {
                 this.status.loggedIn = false;
