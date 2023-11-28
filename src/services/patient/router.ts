@@ -32,7 +32,7 @@ export const PatientRoutes = [
       {
         path: 'add',
         name: 'AddAppointment',
-        components: { default: AddAppointment },
+        component: AddAppointment,
         meta: {
           PageTitle: 'Оформление нового обследования'
         }

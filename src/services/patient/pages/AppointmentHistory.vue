@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import PageHeaderComponent from '@/components/common/PageHeaderComponent.vue'
-import { computed, onMounted, reactive, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import HeroIcon from '@/components/common/HeroIcon.vue'
 import { useRoute } from 'vue-router'
 import VueDatePicker from '@vuepic/vue-datepicker'
@@ -11,6 +11,9 @@ import { convertToLocalTime } from '@/utils/useLocalTimeConverter'
 import InfoRequests from '@/services/patient/requests'
 import { handleError } from '@/utils/handleError'
 import Notification from '@/utils/Notification'
+import { appointmentItem } from '@/constants/conts'
+import UploadMedia from '@/services/patient/parials/UploadMedia.vue'
+import SegmentationSteps from '@/services/patient/parials/SegmentationSteps.vue'
 
 let appForm = reactive({
   patient_id: null,
@@ -25,93 +28,111 @@ let appForm = reactive({
     height: null,
     weight: null
   },
-  appointments: [
-
-  ]
+  appointments: []
 })
+
 
 const route = useRoute()
 const store = usePatientStore()
-const { examination } = storeToRefs(store)
+const { examination, statusesList } = storeToRefs(store)
 const id = computed(() => route?.params?.id)
 
-onMounted(() => {
+onMounted(async () => {
   if (id.value) {
-    store.getExaminationById(id.value)
+    await store.getExaminationById(id.value)
   }
+})
 
+
+
+let newAppointment = reactive({
+  ...appointmentItem
 })
 
 watch(()=>examination.value, (newExamination)=> {
   if(newExamination){
-    appForm = {
-      ...newExamination,
-      appointments: [...newExamination.appointments]
-    }
+    appForm = JSON.parse(JSON.stringify(newExamination))
   }
 }, {immediate: true, deep: true} )
 
-const addNewAppointment = () => {
-  appForm.appointments.push({
-    user_id: null,
-    examination_id: null,
-    appointment_time: null,
-    blood_pressure: null,
-    pulse: null,
-    swell: null,
-    complains: null,
-    diagnosis: null,
-    disease_complications: null,
-    comorbidities: null,
-    disease_anamnesis: null,
-    life_anamnesis: null,
-    echocardiogram_data: null,
-    is_ready: false,
-    appointment_id: 0
-  })
-}
 
-const removeReception = (index) => {
-  if (appForm.appointments.length > 1) {
-    appForm.appointments.splice(index, 1)
-  }
-}
-
-const  handleSubmitAppointment = async () => {
-
-  // TODO: add form  validations
-
-  let lastAppointment = appForm.appointments.pop()
-  let fd = new FormData
-  
-  if(lastAppointment){
-    fd.append("blood_pressure", lastAppointment.blood_pressure);
-    fd.append("pulse", lastAppointment.pulse);
-    fd.append("complains", lastAppointment.complains);
-    fd.append("diagnosis", lastAppointment.diagnosis);
-    fd.append("disease_complications", lastAppointment.disease_complications);
-    fd.append("disease_anamnesis", lastAppointment.disease_anamnesis);
-    fd.append("life_anamnesis", lastAppointment.life_anamnesis);
-    fd.append("echocardiogram_data", lastAppointment.echocardiogram_data);
-    fd.append("comorbidities", lastAppointment.comorbidities);
-    fd.append("swell", lastAppointment.swell);
-
-    // TODO: validate and send
+const removeReception =  async (index, appointment) => {
+  // TODO: do refactoring: just for demo
+  if(appointment?.hasOwnProperty('appointment_id') && appointment.appointment_id !== null){
     try {
-      const { data, status } = await  Notification.promise(InfoRequests.add_appointment(fd, id.value))
+      await  Notification.promise(InfoRequests.delete_appointment(appointment.appointment_id))
       if (id.value) {
         await store.getExaminationById(id.value)
       }
     }
     catch (e) {
-      const errorMessage = handleError(e);
-      console.error(errorMessage);
-      throw e;
+      consoleError(e)
     }
-
+  }else {
+    // TODO: check if appForm.appointments.length > 1
+    appForm.appointments.splice(index, 1)
   }
 }
 
+let isUploading = ref(false)
+
+const  handleSubmitAppointment = async () => {
+
+  // TODO: add form  validations
+
+  //TODO: add appForm.appointments to appointmentsToUpdate if you want to update all appointments
+  let appointmentsToUpdate = [newAppointment]
+
+  await Notification.promise(Promise.all(
+    Object.values(appointmentsToUpdate).map(async (appointment) => {
+      let fd = new FormData();
+      fd.append("examination_id", id.value);
+      fd.append("appointment_id", appointment?.appointment_id);
+      fd.append("blood_pressure", appointment.blood_pressure);
+      fd.append("pulse", appointment.pulse);
+      fd.append("complains", appointment.complains);
+      fd.append("diagnosis", appointment.diagnosis);
+      fd.append("disease_complications", appointment.disease_complications);
+      fd.append("disease_anamnesis", appointment.disease_anamnesis);
+      fd.append("life_anamnesis", appointment.life_anamnesis);
+      fd.append("echocardiogram_data", appointment.echocardiogram_data);
+      fd.append("comorbidities", appointment.comorbidities);
+      fd.append("swell", appointment.swell);
+      await sendAppointment(fd);
+    })
+
+
+  ).catch( (e)=> {
+    consoleError(e)
+  }).finally(()=> {
+    if (id.value) {
+      store.getExaminationById(id.value).then(()=> {
+
+      })
+    }
+  }) )
+
+  async function sendAppointment (fd) {
+    // TODO: validate and send
+    try {
+       await  InfoRequests.add_appointment(fd, id.value)
+    }
+    catch (e) {
+      consoleError(e)
+    }
+
+  }
+
+  newAppointment = {
+    ...appointmentItem
+  }
+}
+
+function consoleError(e){
+  const errorMessage = handleError(e);
+  console.error(errorMessage);
+  throw e;
+}
 function handleDateSelection(date) {
   console.log(date)
 }
@@ -219,14 +240,13 @@ function handleDateSelection(date) {
               />
             </div>
             </div>
-
           <div v-if='examination && examination.appointments.length' class='space-y-3 flex flex-col'>
 
-            <div v-for="(appointment, index) in appForm.appointments" :key='appointment?.appointment_id' class='mb-4 border p-6 rounded-xl relative'>
+            <div v-for="(appointment, index) in appForm.appointments" :key='index' class='mb-4 border p-6 rounded-xl relative'>
               <!--   TODO: just for demo (do refactoring of appForm?.appointments?.length > 1 && appointment_id === 0 ) -->
               <button
                 v-if="appForm?.appointments?.length > 1"
-                @click.prevent="removeReception(index)"
+                @click.prevent="removeReception(index, appointment)"
                 class="absolute text-red-500 transition-all hover:text-white hover:bg-red-500 -top-6 -right-4 bg-white border rounded-full p-2"
               >
                 <HeroIcon icon-type="outline" icon-name="XMarkIcon" class="h-5 w-5" />
@@ -312,14 +332,105 @@ function handleDateSelection(date) {
                       label="Данные по ЭхоКТ:"
                     />
                   </div>
+                  <!--   For demo          -->
+                  <UploadMedia v-if='index !==0' :appointment_id='appointment.appointment_id' api-url='info/add_file' />
+
+                  <div v-if='index ===0' class='grid grid-cols-3 gap-4'>
+                    <div v-for='(stat, index) in statusesList' :key='index'>
+                      <h1 class='truncate p-2 bg-gray-100 rounded mb-4'>съемка {{index+1}}</h1>
+                      <SegmentationSteps :series_statuses='stat?.series_statuses'  />
+                    </div>
+                  </div>
+
+                </div>
+              </details>
+            </div>
+            <div class='mb-4 border p-6 rounded-xl relative'>
+              <details class="group">
+                <summary class="cursor-pointer flex justify-between items-center">
+                  <span>Новый прием</span>
+                    <HeroIcon icon-type="outline" icon-name="PlusCircleIcon" class="h-5 w-5" />
+                </summary>
+                <div class='space-y-4 py-5'>
+                  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <!-- Кровяное давление -->
+                    <div>
+                      <label for="blood_pressure" class="block mb-2 text-sm text-gray-900"
+                      >Кровяное давление:</label
+                      >
+                      <input
+                        v-model='newAppointment.blood_pressure'
+                        type="text"
+                        id="blood_pressure"
+                        class="ad-input"
+                      />
+                    </div>
+
+                    <!-- Пульс -->
+                    <div>
+                      <label for="height" class="block mb-2 text-sm text-gray-900">Пульс:</label>
+                      <input
+                        type="number"
+                        v-model='newAppointment.pulse'
+                        id="height"
+                        class="ad-input"
+                        min="0"
+                        max="250"
+                      />
+                    </div>
+
+
+                    <!-- Отечность -->
+                    <div>
+                      <label for="swelling" class="block mb-2 text-sm text-gray-900">Отечность:</label>
+                      <input v-model='newAppointment.swell' type="text" id="swelling" class="ad-input" />
+                    </div>
+                  </div>
+                  <div class="grid lg:grid-cols-2 grid-cols-1 gap-4">
+                    <!-- Жалобы -->
+                    <ResizableTextarea id="complaints" label="Жалобы:" v-model='newAppointment.complains'  />
+
+                    <!-- Диагноз -->
+                    <ResizableTextarea id="diagnosis" label="Диагноз:" v-model='newAppointment.diagnosis' />
+
+                    <!-- Осложнения -->
+                    <ResizableTextarea
+                      id="complications"
+                      label="Осложнения:"
+                      v-model='newAppointment.disease_complications'
+                    />
+
+                    <!-- Сопуствующие заболевания -->
+                    <ResizableTextarea
+                      id="accompanying_illnesses"
+                      label="Сопуствующие заболевания:"
+                    />
+
+                    <!-- Анамнез в течение жизни -->
+                    <ResizableTextarea
+                      id="anamnesis_life"
+                      label="Анамнез в течение жизни:"
+                      v-model='newAppointment.disease_anamnesis'
+                    />
+
+                    <!-- Анамнез в течение болезни -->
+                    <ResizableTextarea
+                      id="anamnesis_illness"
+                      v-model='newAppointment.life_anamnesis'
+                      label="Анамнез в течение болезни:"
+                    />
+
+                    <!-- Данные по ЭхоКТ -->
+                    <ResizableTextarea
+                      id="EKG_data"
+                      v-model='newAppointment.echocardiogram_data'
+                      label="Данные по ЭхоКТ:"
+                    />
+                  </div>
                 </div>
               </details>
             </div>
 
-            <button @click.prevent="addNewAppointment" class="flex space-x-2 items-center">
-              <HeroIcon icon-type="outline" icon-name="PlusCircleIcon" class="h-5 w-5" />
-              <span>Добавить прием</span>
-            </button>
           </div>
 
           <div class="flex justify-end items-center">
@@ -330,82 +441,10 @@ function handleDateSelection(date) {
       </div>
 
       <div class="flex space-x-3 mt-6">
-        <form
-          @submit.prevent
-          class="bg-white col-span-2 text-gray-300 group border hover:border-2 duration-300 hover:cursor-pointer transition-all relative border-dashed border-theme-primary0 h-[400px] rounded-xl flex justify-center items-center w-full"
-        >
-          <div
-            class="flex items-center justify-center flex-col space-y-2 group-hover:text-theme-primary10"
-          >
-            <HeroIcon icon-type="outline" icon-name="ArrowUpTrayIcon" />
-            <span>Загрузить файлы</span>
-          </div>
 
-          <button
-            type="submit"
-            class="absolute bottom-2 right-2 bg-theme-primary10 hover:bg-theme-primary20 text-white px-4 py-2 rounded-tl-xl rounded-br-xl"
-          >
-            Сохранить
-          </button>
-        </form>
-        <div class="lg:block hidden w-[400px] border p-6 bg-white rounded-xl">
-          <ol class="relative text-gray-500 border-l ml-4 border-gray-200">
-            <li class="mb-5 ml-8">
-              <span
-                class="absolute flex items-center justify-center w-8 h-8 bg-green-200 rounded-full -left-4 ring-4 ring-theme-primary60"
-              >
-                <HeroIcon icon-type="outline" icon-name="ArrowPathIcon" class="animate-spin" />
-              </span>
-              <h3 class="leading-tight">Pre Processing</h3>
-              <p class="text-xs">Step details here</p>
-            </li>
-            <li class="my-5 ml-8">
-              <span
-                class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -left-4 ring-4 ring-theme-secondary30"
-              >
-                2
-              </span>
-              <h3 class="leading-tight">Aortic Segmentation</h3>
-              <p class="text-xs">Step details here</p>
-            </li>
-            <li class="mb-5 ml-8">
-              <span
-                class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -left-4 ring-4 ring-theme-secondary30"
-              >
-                3
-              </span>
-              <h3 class="leading-tight">Segmentation Networks</h3>
-              <p class="text-xs">Step details here</p>
-            </li>
-            <li class="mb-5 ml-8">
-              <span
-                class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -left-4 ring-4 ring-theme-secondary30"
-              >
-                4
-              </span>
-              <h3 class="leading-tight">Performance Metrics</h3>
-              <p class="text-xs">Step details here</p>
-            </li>
-            <li class="mb-5 ml-8">
-              <span
-                class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -left-4 ring-4 ring-theme-secondary30"
-              >
-                5
-              </span>
-              <h3 class="leading-tight">Performance Metrics</h3>
-              <p class="text-xs">Step details here</p>
-            </li>
-            <li class="ml-8">
-              <span
-                class="absolute flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full -left-4 ring-4 ring-theme-secondary30"
-              >
-                6
-              </span>
-              <h3 class="leading-tight">Performance Metrics</h3>
-              <p class="text-xs">Step details here</p>
-            </li>
-          </ol>
-        </div>
+
+
+
       </div>
     </div>
   </div>

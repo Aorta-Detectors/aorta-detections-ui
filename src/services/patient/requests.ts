@@ -1,7 +1,7 @@
 import commonApi from '@/http/commonApi'
 import api from '@/http'
 
-const infoBasePath = '/info';
+ export const infoBasePath = '/info';
 export default class InfoRequests {
     /*
     * GET
@@ -34,5 +34,17 @@ export default class InfoRequests {
     * */
     static async add_appointment(payloadParams: any, examination_id: number) {
         return api.put(`${infoBasePath}/add_appointment?examination_id=${examination_id}`, payloadParams);
+    }
+    static async add_file(payloadParams: any, appointment_id: number) {
+        return api.put(`${infoBasePath}/add_file?appointment_id=${appointment_id}`, payloadParams);
+    }
+    /*
+    * DELETE
+    * */
+    static async delete_examination(examination_id: number) {
+        return api.delete(`${infoBasePath}/delete_examination?examination_id=${examination_id}`);
+    }
+    static async delete_appointment(appointment_id: number) {
+        return api.delete(`${infoBasePath}/delete_appointment?appointment_id=${appointment_id}`);
     }
 }
