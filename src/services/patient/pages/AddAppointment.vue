@@ -7,9 +7,8 @@ import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import PageHeaderComponent from '@/components/common/PageHeaderComponent.vue'
 import HeroIcon from '@/components/common/HeroIcon.vue'
-import { computed, reactive, watch } from 'vue'
+import { computed, reactive  } from 'vue'
 import OMCComponent from '@/components/common/form/OMCComponent.vue'
-import FileDragComponent from '@/components/common/form/FileDragComponent.vue'
 import { validateOMC } from '@/utils/validateOMC'
 import { usePatientStore } from '@/services/patient/store'
 import { storeToRefs } from 'pinia'
@@ -17,7 +16,7 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const patientStore = usePatientStore()
-const { status, is_patient_exist, isLoadingOMC } = storeToRefs(patientStore)
+const { is_patient_exist, isLoadingOMC } = storeToRefs(patientStore)
 let isOMCFull = false
 
 // т.к. сейчас у нас поле is_male это boolean
@@ -112,7 +111,6 @@ function addReceptionsListToFD(data, id) {
   data.append("echocardiogram_data", patientForm.receptionsList[id].echocardiogram_data);
   data.append("comorbidities", patientForm.receptionsList[id].comorbidities);
   data.append("swell", patientForm.receptionsList[id].swell);
-  data.append("file", patientForm.receptionsList[id].file);
 }
 
 function addPatientDataToFD(data) {
@@ -126,26 +124,17 @@ function addPatientDataToFD(data) {
 
 // Сохранение patientForm в бд и редиарект на страничку Дашборда TODO: редиарект на страничку "История обследования"
 async function handleAddAppointment() {
-  console.log("INFO: handleAddAppointment")
-  console.log("is_patient_exist = ", is_patient_exist.value)
   v$.value.$touch()
   if (!v$.value.$error) {
-    console.log("INFO: sending appointment")
     if (is_patient_exist.value) {
-      console.log("INFO: patient exists")
-
       let appointment = new FormData();
 
       // пока что отправляется только первый элемент из receptionsList TODO
       // receptionsList[0]
       addReceptionsListToFD(appointment, 0)
-
-      console.log(appointment);
       await patientStore.addAppointment(appointment, 1)
     }
     else {
-      console.log("INFO: patient does not exist")
-
       let examination = new FormData();
 
       // patientData
@@ -155,10 +144,9 @@ async function handleAddAppointment() {
       // receptionsList[0]
       addReceptionsListToFD(examination, 0);
 
-      console.log(examination);
       await patientStore.createExamination(examination)
     }
-    await router.push({ name: 'Dashboard' })
+    await router.push({ name: 'AppointmentsHistory' })
   }
 }
 
@@ -172,11 +160,6 @@ function handleOMCAccept(OMC) {
   isOMCFull = OMC.length === 16
 }
 
-// Передача файла
-function handleFileChanged(file) {
-  patientForm.receptionsList[0].file = file; // TODO
-  console.log('handleFileChanged:', patientForm.receptionsList[0].file);
-}
 </script>
 
 <template>
@@ -281,7 +264,6 @@ function handleFileChanged(file) {
         </div>
 
         <fieldset class="rounded-md space-y-4 px-6 w-full">
-          <legend class="">Список приемов ({{ patientForm.receptionsList.length }})</legend>
           <TransitionGroup name="list" tag="ul">
             <fieldset
               v-for="(reception, index) in patientForm.receptionsList"
@@ -383,18 +365,8 @@ function handleFileChanged(file) {
                 v-model="reception.echocardiogram_data"
               />
 
-              <!-- Файл -->
-              <FileDragComponent
-                @file_changed="handleFileChanged"
-              />
             </fieldset>
           </TransitionGroup>
-          <div>
-            <button @click.prevent="addReception" class="flex space-x-2 items-center">
-              <HeroIcon icon-type="outline" icon-name="PlusCircleIcon" class="h-5 w-5" />
-              <span>Добавить прием</span>
-            </button>
-          </div>
         </fieldset>
 
         <div class="flex justify-end items-center bg-gray-50 p-6">

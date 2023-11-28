@@ -8,6 +8,12 @@ import {  RouterView } from 'vue-router'
 </template>
 
 <style  >
+@font-face {
+  font-family: 'ArialUnicodeMS';
+  src: url(src/assets/css/arial-unicode-ms.ttf) format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
 .inner-bg {
   height: 100vh;
   width: 100%;
