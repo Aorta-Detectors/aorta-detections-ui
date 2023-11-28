@@ -41,12 +41,13 @@ let appForm = reactive({
   appointments: []
 })
 
+let is_ready_map = new Map()
 
 const route = useRoute()
 const router = useRouter()
 
 const store = usePatientStore()
-const { examination, statusesList, appointmentsList } = storeToRefs(store)
+const { examination, statusesList, appointmentsList, statusesMap } = storeToRefs(store)
 const id = computed(() => route?.params?.id)
 
 onMounted(async () => {
@@ -55,7 +56,10 @@ onMounted(async () => {
   }
 })
 
-
+async function isFileLoaded(appointment_id) {
+  const result = await store.get_series_statuses(appointment_id);
+  return result;
+}
 
 let newAppointment = reactive({
   ...appointmentItem
@@ -64,6 +68,12 @@ let newAppointment = reactive({
 watch(()=>examination.value, (newExamination)=> {
   if(newExamination){
     appForm = JSON.parse(JSON.stringify(newExamination))
+    for (const appointment of appForm.appointments){
+      console.log(appointment.appointment_id)
+      let heh = isFileLoaded(appointment.appointment_id)
+      console.log(heh)
+      store.get_series_statuses(appointment.appointment_id);
+    }
   }
 }, {immediate: true, deep: true} )
 
@@ -426,9 +436,9 @@ async function openAppointment(examination_id, appointment_id){
                     />
                   </div>
                   <!--   For demo          -->
-                  <UploadMedia v-if='index !==0' :appointment_id='appointment.appointment_id' api-url='info/add_file' />
+                  <UploadMedia v-if='!statusesMap.get(appointment.appointment_id)' :appointment_id='appointment.appointment_id' api-url='info/add_file' />
 
-                  <div v-if='index ===0' class='grid grid-cols-3 gap-4'>
+                  <div v-if='statusesMap.get(appointment.appointment_id)' class='grid grid-cols-3 gap-4'>
                     <div v-for='(stat, index) in statusesList' :key='index'>
                       <h1 class='truncate p-2 bg-gray-100 rounded mb-4'>съемка {{index+1}}</h1>
                       <SegmentationSteps :series_statuses='stat?.series_statuses'  />
