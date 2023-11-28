@@ -23,9 +23,6 @@ import { appointmentItem } from '@/constants/conts'
 import UploadMedia from '@/services/patient/parials/UploadMedia.vue'
 import SegmentationSteps from '@/services/patient/parials/SegmentationSteps.vue'
 
-const patientStore = usePatientStore()
-const { appointmentsList } = storeToRefs(patientStore)
-
 const isOpen = ref(false)
 
 let appForm = reactive({
@@ -49,7 +46,7 @@ const route = useRoute()
 const router = useRouter()
 
 const store = usePatientStore()
-const { examination, statusesList } = storeToRefs(store)
+const { examination, statusesList, appointmentsList } = storeToRefs(store)
 const id = computed(() => route?.params?.id)
 
 onMounted(async () => {
@@ -158,7 +155,8 @@ function closeModal() {
   isOpen.value = false
 }
 async function openModal() {
-  await patientStore.getExamination(id.value);
+  await store.getExamination(id.value);
+  console.log("openModal", appointmentsList)
   isOpen.value = true
 }
 
@@ -172,6 +170,8 @@ async function openAppointment(examination_id, appointment_id){
   <div class="overflow-x-auto">
     <PageHeaderComponent :title="`Обследования №${examination?.examination_id} от ${convertToLocalTime(examination?.created_at)}`" >
       <button  @click="openModal" class="flex space-x-2 px-2 py-2 rounded-md bg-white border hover:bg-gray-50 outline-none">
+        <HeroIcon icon-type="outline" icon-name="DocumentChartBarIcon" class="block h-6 w-6" aria-hidden="true"/>
+        <span>Посмотреть отчет</span>
       </button>
     </PageHeaderComponent>
 
@@ -205,20 +205,36 @@ async function openAppointment(examination_id, appointment_id){
             <DialogPanel
               class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all"
             >
+
+            <DialogTitle
+                as="h3"
+                class="text-lg font-medium leading-6 text-gray-900"
+              >
+                Выберете нужный приём
+            </DialogTitle>
             <fieldset
               v-for="(appointment, index) in appointmentsList"
               :key="index"
-              class="border white mb-4 relative border-solid border-gray-300 p-3 rounded-md lg:grid lg:grid-cols-2 lg:space-y-0 space-y-4 lg:gap-4 w-full"
+              class="white mb-4 relative p-1 lg:grid lg:grid-cols-1 lg:space-y-0 space-y-1 lg:gap-1 w-full"
             >
               <a  href="#" class="group block col-span-2 rounded-lg p-6 bg-white ring-1 ring-slate-900/5 shadow-lg hover:bg-slate-100">
                   <div class="flex items-center">
-                      <h3 class="text-slate-900 text-sm font-semibold">{{ appointment.appointment_id }}</h3>
-                      <h3 class="text-slate-900 text-sm font-semibold">{{ " " }}</h3>
-                      <h3 class="text-slate-900 text-sm font-semibold">{{ new Date(appointment.appointment_time).toLocaleTimeString() }}</h3>
+                      <h3 class="text-slate-900 text-sm font-semibold">{{ "Приём №" + appointment.appointment_id }}</h3>
+                      <span>&nbsp;</span>
+                      <h3 class="text-slate-900 text-sm font-semibold">{{ "от " + new Date(appointment.appointment_time).toLocaleDateString() }}</h3>
+                      <!-- <span>&nbsp;</span>
+                      <h3 class="text-slate-900 text-sm font-semibold">{{ ", время: " + new Date(appointment.appointment_time).toLocaleTimeString() }}</h3> -->
                       <button @click="openAppointment(id, appointment.appointment_id)" class="ml-auto bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"> Посмотреть </button>
                   </div>
               </a>
             </fieldset>
+            <button
+              type="button"
+              class="inline-flex ml-auto justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-green-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
+              @click="closeModal"
+            >
+              Закрыть
+            </button>
             </DialogPanel>
           </TransitionChild>
         </div>

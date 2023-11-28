@@ -15,13 +15,14 @@ import type {
     Appointment
 } from '@/services/patient/models/reception.interfaces'
 import { and } from '@vuelidate/validators'
+import { toRaw } from 'vue';
 
 type TState = {
     is_patient_exist: boolean,
     isLoading: boolean,
     examinations: IExaminations, 
     patients: IPatients,
-    examination: IExamination | null,
+    examination: IExamination,
     statuses: any
 }
 export const usePatientStore = defineStore('patientStore', {
@@ -355,9 +356,10 @@ export const usePatientStore = defineStore('patientStore', {
       return state.patients.requested_patients
     }, 
 
-    appointmentsList(state: TState): Appointment[] | undefined {
-        return state.examination?.appointments
-      }, 
+    appointmentsList(state: TState): any {
+        console.log("appointmentsList", toRaw(state.examination.appointments))
+        return toRaw(state.examination?.appointments)
+    }, 
   },
 
   actions: {
@@ -455,6 +457,7 @@ export const usePatientStore = defineStore('patientStore', {
             const { data, status } = await InfoRequests.get_examination(examination_id);
             this.examination = data
             console.log("requested examination: ", data)
+            console.log("obtained examination: ", toRaw(this.examination))
         }
         catch (e) {
             throw e;
