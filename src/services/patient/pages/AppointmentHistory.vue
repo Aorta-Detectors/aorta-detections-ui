@@ -2,22 +2,28 @@
 import PageHeaderComponent from '@/components/common/PageHeaderComponent.vue'
 import { computed, reactive } from 'vue'
 import HeroIcon from '@/components/common/HeroIcon.vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import VueDatePicker from '@vuepic/vue-datepicker'
 import ResizableTextarea from '@/components/ResizableTextarea.vue'
 import ErrorComponent from '@/components/common/ErrorComponent.vue'
+import { usePatientStore } from '@/services/patient/store'
+import { ref } from 'vue'
+import {
+  TransitionRoot,
+  TransitionChild,
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+} from '@headlessui/vue'
+import { storeToRefs } from 'pinia'
 
-const appointment = reactive({
-  id: 2,
-  OMC: '0000 0000 0000 0000',
-  FIO: ' Gondran дизайна и композиции читаемый текст мешает сосредоточиться',
-  sex: 'M',
-  date: '10.10.2023',
-  height:
-    'Давно выяснено, что при оценке дизайна и композиции читаемый текст мешает сосредоточиться. Lorem Ipsum используют потому',
-  complaints:
-    'что тот обеспечивает более или менее стандартное заполнение шаблона, а также реальное распределение букв и пробелов в абзацах, которое не получается при простой'
-})
+const patientStore = usePatientStore()
+const { appointmentsList } = storeToRefs(patientStore)
+
+const isOpen = ref(false)
+
+const someList = ["lol", "kek", "chebureck"]
+
 
 const patientForm = reactive({
   OMC: null,
@@ -43,6 +49,7 @@ const patientForm = reactive({
 })
 
 const route = useRoute()
+const router = useRouter()
 
 const id = computed(() => route?.params?.id)
 
@@ -51,17 +58,80 @@ function handleDateSelection(date) {
 }
 
 function handleUpdateAppointment() {}
+
+function closeModal() {
+  isOpen.value = false
+}
+async function openModal() {
+  await patientStore.getExamination(id.value);
+  isOpen.value = true
+}
+
+async function openAppointment(examination_id, appointment_id){
+  await router.push({ name: 'ViewAppointmentReport', params: { id: examination_id, appointment_id: appointment_id} });
+}
+
 </script>
 
 <template>
   <div class="overflow-x-auto">
     <PageHeaderComponent :title="`Обследования №${id} от 10.10.2023`" >
-      <router-link :to="{name: 'ViewAppointmentReport', params: {id: id}}"  class="flex space-x-2 px-2 py-2 rounded-md bg-white border hover:bg-gray-50 outline-none">
+      <button  @click="openModal" class="flex space-x-2 px-2 py-2 rounded-md bg-white border hover:bg-gray-50 outline-none">
         <HeroIcon icon-type="outline" icon-name="DocumentChartBarIcon" class="block h-6 w-6" aria-hidden="true"/>
         <span>Посмотреть отчет</span>
-      </router-link>
+      </button>
     </PageHeaderComponent>
 
+  <TransitionRoot appear :show="isOpen" as="template">
+    <Dialog as="div" @close="closeModal" class="relative z-10">
+      <TransitionChild
+        as="template"
+        enter="duration-300 ease-out"
+        enter-from="opacity-0"
+        enter-to="opacity-100"
+        leave="duration-200 ease-in"
+        leave-from="opacity-100"
+        leave-to="opacity-0"
+      >
+        <div class="fixed inset-0 bg-black/25" />
+      </TransitionChild>
+
+      <div class="fixed inset-0 overflow-y-auto">
+        <div
+          class="flex min-h-full items-center justify-center p-4 text-center"
+        >
+          <TransitionChild
+            as="template"
+            enter="duration-300 ease-out"
+            enter-from="opacity-0 scale-95"
+            enter-to="opacity-100 scale-100"
+            leave="duration-200 ease-in"
+            leave-from="opacity-100 scale-100"
+            leave-to="opacity-0 scale-95"
+          >
+            <DialogPanel
+              class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all"
+            >
+            <fieldset
+              v-for="(appointment, index) in appointmentsList"
+              :key="index"
+              class="border white mb-4 relative border-solid border-gray-300 p-3 rounded-md lg:grid lg:grid-cols-2 lg:space-y-0 space-y-4 lg:gap-4 w-full"
+            >
+              <a  href="#" class="group block col-span-2 rounded-lg p-6 bg-white ring-1 ring-slate-900/5 shadow-lg hover:bg-slate-100">
+                  <div class="flex items-center">
+                      <h3 class="text-slate-900 text-sm font-semibold">{{ appointment.appointment_id }}</h3>
+                      <h3 class="text-slate-900 text-sm font-semibold">{{ " " }}</h3>
+                      <h3 class="text-slate-900 text-sm font-semibold">{{ new Date(appointment.appointment_time).toLocaleTimeString() }}</h3>
+                      <button @click="openAppointment(id, appointment.appointment_id)" class="ml-auto bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"> Посмотреть </button>
+                  </div>
+              </a>
+            </fieldset>
+            </DialogPanel>
+          </TransitionChild>
+        </div>
+      </div>
+    </Dialog>
+  </TransitionRoot>
     <div class="mt-8">
       <div class="w-full mt-10 border p-6 bg-white rounded-2xl">
         <form

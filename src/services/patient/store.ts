@@ -6,13 +6,14 @@ import axios from 'axios';
 import Notification from '@/utils/Notification'
 import SecurityRequests from '@/services/security/requests'
 import { OMC_NOT_FOUND } from '@/constants/conts'
-import type { IExaminations, IRequestedExamination, IPatients, IRequestedPatient } from '@/services/patient/models/reception.interfaces'
+import type { IExaminations, IRequestedExamination, IPatients, IRequestedPatient, IExamination, IAppointmentItem } from '@/services/patient/models/reception.interfaces'
 
 type TState = {
     is_patient_exist: boolean,
     isLoading: boolean,
     examinations: IExaminations, 
-    patients: IPatients
+    patients: IPatients,
+    examination: IExamination,
 }
 export const usePatientStore = defineStore('patientStore', {
     state: () : TState => ({
@@ -29,6 +30,14 @@ export const usePatientStore = defineStore('patientStore', {
             objects_count_on_current_page: null,
             page_total_count: null,
             requested_patients: []
+        }, 
+        examination: {
+            patient_id: null,
+            creator_id: null,
+            created_at: null,
+            examination_id: null,
+            patient: null, 
+            appointments: []
         }
     }),
     getters: {
@@ -62,6 +71,10 @@ export const usePatientStore = defineStore('patientStore', {
 
         patientsList(state: TState) : IRequestedPatient[] {
             return state.patients.requested_patients
+        },
+
+        appointmentsList(state: TState) : IAppointmentItem[] {
+            return state.examination.appointments
         }
     },
 
@@ -130,6 +143,19 @@ export const usePatientStore = defineStore('patientStore', {
                 } else {
                     throw e;
                 }
+            }finally {
+                this.isLoading = false
+            }
+        },
+        async getExamination(examination_id: string) {
+            this.isLoading = true
+            try {
+                const { data, status } = await InfoRequests.get_examination(examination_id);
+                this.examination = data
+                console.log("requested examination: ", data)
+            }
+            catch (e) {
+                throw e;
             }finally {
                 this.isLoading = false
             }

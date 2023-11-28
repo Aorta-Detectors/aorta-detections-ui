@@ -21,4 +21,7 @@ export default class InfoRequests {
     static async general_info() {
         return api.get(`${infoBasePath}/general_info`);
     }
+    static async get_examination(examination_id: number | string) {
+        return api.get(`${infoBasePath}/get_examination?examination_id=${examination_id}`);
+    }
 }

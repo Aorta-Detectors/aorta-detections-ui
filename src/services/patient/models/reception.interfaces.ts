@@ -42,3 +42,30 @@ export interface IRequestedPatient {
   height: number,
   weight: number
 }
+
+export interface IExamination {
+  patient_id: string,
+  creator_id: string,
+  created_at: Date,
+  examination_id: number,
+  patient: IRequestedPatient, 
+  appointments: IAppointmentItem[]
+}
+
+export  interface IAppointmentItem {
+  user_id: string, 
+  examination_id: string,
+  appointment_time: string,
+  blood_pressure: string,
+  pulse: string,
+  swell: string,
+  complains: string,
+  diagnosis: string,
+  disease_complications: string,
+  comorbidities: string,
+  disease_anamnesis: string,
+  life_anamnesis: string,
+  echocardiogram_data: string,
+  is_ready: boolean,
+  appointment_id: string
+}
