@@ -412,6 +412,8 @@ export const usePatientStore = defineStore('patientStore', {
       try {
         const { data, status } = await InfoRequests.getExaminationById(id)
         this.examination = data
+
+        console.log('test',JSON.parse(JSON.stringify(this.examination)))
       } catch (e) {
         if (axios.isAxiosError(e) && e.response) {
           let resp = e?.response

@@ -178,12 +178,13 @@ async function openAppointment(examination_id, appointment_id){
 
 <template>
   <div class="overflow-x-auto">
-    <PageHeaderComponent :title="`Обследования №${examination?.examination_id} от ${convertToLocalTime(examination?.created_at)}`" >
+    <PageHeaderComponent :title="`Обследование №${examination?.examination_id} от ${convertToLocalTime(examination?.created_at)}`" >
       <button  @click="openModal" class="flex space-x-2 px-2 py-2 rounded-md bg-white border hover:bg-gray-50 outline-none">
         <HeroIcon icon-type="outline" icon-name="DocumentChartBarIcon" class="block h-6 w-6" aria-hidden="true"/>
         <span>Посмотреть отчет</span>
       </button>
     </PageHeaderComponent>
+
 
   <TransitionRoot appear :show="isOpen" as="template">
     <Dialog as="div" @close="closeModal" class="relative z-10">
@@ -220,7 +221,7 @@ async function openAppointment(examination_id, appointment_id){
                 as="h3"
                 class="text-lg font-medium leading-6 text-gray-900"
               >
-                Выберете нужный приём
+                Выберите нужный приём
             </DialogTitle>
             <fieldset
               v-for="(appointment, index) in appointmentsList"
