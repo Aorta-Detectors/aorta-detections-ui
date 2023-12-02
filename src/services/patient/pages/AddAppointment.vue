@@ -37,17 +37,17 @@ const patientForm = reactive({
   },
   receptionsList: [
     {
-      blood_pressure: null,
+      blood_pressure: '',
       pulse: '',
-      swell: null,
-      complains: null,
-      diagnosis: null,
-      disease_complications: null,
-      comorbidities: null,
-      disease_anamnesis: null,
-      life_anamnesis: null,
-      echocardiogram_data: null,
-      file: null
+      swell: '',
+      complains: '',
+      diagnosis: '',
+      disease_complications: '',
+      comorbidities: '',
+      disease_anamnesis: '',
+      life_anamnesis: '',
+      echocardiogram_data: '',
+      file: ''
     }
   ], 
 })
