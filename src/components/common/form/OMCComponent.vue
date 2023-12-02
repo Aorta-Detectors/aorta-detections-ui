@@ -68,8 +68,8 @@ export default {
     },
     onComplete(e) {
       const maskRef = e.detail
-      this.$emit('update:modelValue', maskRef.unmaskedValue)
       this.$emit('onCompleted', maskRef.unmaskedValue)
+      this.$emit('update:modelValue', maskRef.unmaskedValue)
     }
   }
 }

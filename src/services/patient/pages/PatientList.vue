@@ -37,14 +37,13 @@ onMounted(async () => {
                 <th scope="col" class="px-6 py-3 truncate">Дата Рождения</th>
                 <th scope="col" class="px-6 py-3 truncate">Рост (в см)</th>
                 <th scope="col" class="px-6 py-3 truncate">Вес (в кг)</th>
-                <th class="px-6 py-3"></th>
               </tr>
               </thead>
               <tbody class="[&>*:nth-child(even)]:bg-gray-100 [&>*:nth-child(odd)]:bg-white">
                 <tr
                   v-for="patient in patientsList"
                   :key="patient?.patient_id"
-                  class="border-b hover:bg-gray-100 cursor-pointer"
+                  class="border-b hover:bg-gray-100 "
                 >
                 <td class="px-6 py-4  truncate">  {{ patient?.patient_id }} </td>
                 <td class="px-6 py-4 truncate">  {{ patient?.full_name }} </td>
@@ -52,11 +51,6 @@ onMounted(async () => {
                 <td class="px-6 py-4">  {{ patient?.birth_date }} </td>
                 <td class="px-6 py-4">  {{ patient?.height }} </td>
                 <td class="px-6 py-4">  {{ patient?.weight }} </td>
-                <td @click.stop.prevent>
-                  <button type="button" >
-                    <HeroIcon  icon-name='TrashIcon' class="h-5 w-5 text-red-500 outline-none hover:text-red-800"  icon-type='outline'/>
-                  </button>
-                </td>
                 </tr>
               </tbody>
             </table>

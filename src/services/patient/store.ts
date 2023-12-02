@@ -439,27 +439,19 @@ export const usePatientStore = defineStore('patientStore', {
         this.isLoading = false
       }
     },
-    async addAppointment(payload: any, examination_id: number) {
-      try {
-        const { data, status } = await InfoRequests.add_appointment(payload, examination_id)
-      } catch (e) {
-        const errorMessage = handleError(e)
-        console.error(errorMessage)
-        throw e
-      }
-    },
 
     async createExamination(payload: any) {
+      this.isLoading = true
       try {
-        const { data, status } = await InfoRequests.create_examination(payload)
+       await InfoRequests.create_examination(payload)
       } catch (e) {
-        const errorMessage = handleError(e)
-        console.error(errorMessage)
         throw e
+      }finally {
+        this.isLoading =false
       }
     },
 
-    async getPatient(OMSNumber: number) {
+    async getPatient(OMSNumber: string | undefined) {
       this.isLoading = true
       try {
         const { data, status } = await InfoRequests.get_patient(OMSNumber)

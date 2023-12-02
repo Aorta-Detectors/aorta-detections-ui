@@ -8,6 +8,6 @@ export const convertToLocalTime = (isoDateString: UnwrapRef<IExamination['create
         return;
     }
 
-    return date.toLocaleDateString()
+    return date.toLocaleString()
 };
 
