@@ -44,6 +44,9 @@ export default class InfoRequests {
     static async add_appointment(payloadParams: any, examination_id: number) {
         return api.put(`${infoBasePath}/add_appointment?examination_id=${examination_id}`, payloadParams);
     }
+    static async update_appointment(payload: any, appointment_id: number) {
+        return api.put(`${infoBasePath}/update_appointment?appointment_id=${appointment_id}`, payload);
+    }
     static async add_file(payloadParams: any, appointment_id: number) {
         return api.put(`${infoBasePath}/add_file?appointment_id=${appointment_id}`, payloadParams);
     }
