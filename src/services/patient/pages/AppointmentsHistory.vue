@@ -7,6 +7,7 @@ import { usePatientStore } from '@/services/patient/store'
 import { storeToRefs } from 'pinia'
 import Loading from '@/components/Looading.vue'
 import NoData from '@/components/NoData.vue'
+import { convertToLocalTime } from '@/utils/useLocalTimeConverter'
 
 const router = useRouter()
 const store = usePatientStore()
@@ -45,8 +46,7 @@ const handleOpenAppointment = (id): void => {
               <tr
                 v-for="examination in examinationsList"
                 :key="examination?.examination_id"
-                @click="handleOpenAppointment(examination?.examination_id)"
-                class="border-b hover:bg-gray-100 cursor-pointer"
+                class="border-b hover:bg-gray-100"
               >
                 <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
                   {{ examination?.examination_id }}
@@ -55,9 +55,9 @@ const handleOpenAppointment = (id): void => {
                 <td class="px-6 py-4">
                   <span class="line-clamp-1">{{ examination?.patient_name }}</span>
                 </td>
-                <td class="px-6 py-4">{{ examination?.last_appointment_time }}</td>
+                <td class="px-6 py-4">{{ convertToLocalTime(examination?.last_appointment_time) }}</td>
                 <td @click.stop.prevent>
-                  <button type="button">
+                  <button @click="handleOpenAppointment(examination?.examination_id)" type="button">
                     <HeroIcon
                       icon-name="PencilSquareIcon"
                       class="h-5 w-5 text-green-500 outline-none hover:text-green-800"

@@ -70,7 +70,7 @@ export const PatientRoutes = [
             }
           },
           {
-            path: 'report',
+            path: 'report/:appointment_id',
             name: 'ViewAppointmentReport',
             component:ViewAppointmentReport,
             meta: {

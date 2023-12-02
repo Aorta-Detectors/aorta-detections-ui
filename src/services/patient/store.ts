@@ -11,21 +11,31 @@ import type {
     IRequestedExamination,
     IPatients,
     IRequestedPatient,
-    IExamination
+    IExamination, 
+    Appointment
 } from '@/services/patient/models/reception.interfaces'
 import { and } from '@vuelidate/validators'
+import { toRaw } from 'vue';
 
 type TState = {
     is_patient_exist: boolean,
     isLoading: boolean,
     examinations: IExaminations, 
     patients: IPatients,
-    examination: IExamination | null,
-    statuses: any
+    examination: IExamination,
+    statuses: any,
+    appointment: Appointment,
+    slices: []
+    status: any,
+    status_map: any,
+    status_set: any
 }
 export const usePatientStore = defineStore('patientStore', {
   state: (): TState => ({
     is_patient_exist: false,
+    status: null,
+    status_map: new Map(),
+    status_set: new Set(),
     statuses: [
       {
         series_hash: '1287d80345019b5c5825b2f5f9308f12',
@@ -313,11 +323,16 @@ export const usePatientStore = defineStore('patientStore', {
           appointment_id: 0
         }
       ]
-    }
+    }, 
+    appointment: null, 
+    slices: [null, null, null, null, null, null, null, null]
   }),
   getters: {
     statusesList(state: TState) {
       return state.statuses
+    },
+    statusesMap(state: TState) {
+      return state.status_map
     },
     currentExamination(state: TState): IExamination {
       return state.examination
@@ -352,17 +367,34 @@ export const usePatientStore = defineStore('patientStore', {
 
     patientsList(state: TState): IRequestedPatient[] {
       return state.patients.requested_patients
-    }
+    }, 
+
+    appointmentsList(state: TState): any {
+        console.log("appointmentsList", toRaw(state.examination.appointments))
+        return toRaw(state.examination?.appointments)
+    }, 
+
+    appointmentGet(state: TState): Appointment {
+      console.log(state.appointment)
+      return toRaw(state.appointment)
+    },
   },
 
   actions: {
-    async get_series_statuses() {
+    async get_series_statuses(id: number | string) {
+      let result = false;
       try {
-        const { data, status } = await InfoRequests.get_status(1) //TODO: add id
-        this.statuses = data.series_statuses
+        const { data, status } = await InfoRequests.get_status(id) 
+        this.status = data
+        result = (data.serieses_statuses.length >= 1)
+        this.status_map.set(id, result)
+        this.status_set.add(result)
+        console.log("status map: ", this.status_map)
+        console.log("id: ", id, "result : ", result)
       } catch (e) {
         throw e
       }
+      return result
     },
     async getExaminationsList(page?: number, size?: number) {
       this.isLoading = true
@@ -380,6 +412,8 @@ export const usePatientStore = defineStore('patientStore', {
       try {
         const { data, status } = await InfoRequests.getExaminationById(id)
         this.examination = data
+
+        console.log('test',JSON.parse(JSON.stringify(this.examination)))
       } catch (e) {
         if (axios.isAxiosError(e) && e.response) {
           let resp = e?.response
@@ -405,27 +439,19 @@ export const usePatientStore = defineStore('patientStore', {
         this.isLoading = false
       }
     },
-    async addAppointment(payload: any, examination_id: number) {
-      try {
-        const { data, status } = await InfoRequests.add_appointment(payload, examination_id)
-      } catch (e) {
-        const errorMessage = handleError(e)
-        console.error(errorMessage)
-        throw e
-      }
-    },
 
     async createExamination(payload: any) {
+      this.isLoading = true
       try {
-        const { data, status } = await InfoRequests.create_examination(payload)
+       await InfoRequests.create_examination(payload)
       } catch (e) {
-        const errorMessage = handleError(e)
-        console.error(errorMessage)
         throw e
+      }finally {
+        this.isLoading =false
       }
     },
 
-    async getPatient(OMSNumber: number) {
+    async getPatient(OMSNumber: string | undefined) {
       this.isLoading = true
       try {
         const { data, status } = await InfoRequests.get_patient(OMSNumber)
@@ -442,6 +468,49 @@ export const usePatientStore = defineStore('patientStore', {
       } finally {
         this.isLoading = false
       }
+    },
+
+    async getExamination(examination_id: string) {
+        this.isLoading = true
+        try {
+            const { data, status } = await InfoRequests.get_examination(examination_id);
+            this.examination = data
+            console.log("requested examination: ", data)
+            console.log("obtained examination: ", toRaw(this.examination))
+        }
+        catch (e) {
+            throw e;
+        }finally {
+            this.isLoading = false
+        }
+    },
+
+    async getAppointment(appointment_id: string) {
+      this.isLoading = true
+      try {
+          const { data, status } = await InfoRequests.get_appointment(appointment_id);
+          this.appointment = data
+          console.log(this.appointment)
+      }
+      catch (e) {
+          throw e;
+      }finally {
+          this.isLoading = false
+      }
+   },
+   async getSlice(appointment_id: string, series_id:  string, slice_num: string) {
+    this.isLoading = true
+    try {
+        const { data, status } = await InfoRequests.get_slice(appointment_id, series_id, slice_num);
+        // this.slices[Number(slice_num)] = data
+        console.log("slice: ", data)
     }
+    catch (e) {
+        throw e;
+    }finally {
+        this.isLoading = false
+    }
+ },
+
   }
 })
