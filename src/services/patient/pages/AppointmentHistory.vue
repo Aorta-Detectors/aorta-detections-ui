@@ -3,7 +3,6 @@ import PageHeaderComponent from '@/components/common/PageHeaderComponent.vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import HeroIcon from '@/components/common/HeroIcon.vue'
 import { useRoute, useRouter } from 'vue-router'
-import VueDatePicker from '@vuepic/vue-datepicker'
 import ResizableTextarea from '@/components/ResizableTextarea.vue'
 import { usePatientStore } from '@/services/patient/store'
 import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
@@ -15,6 +14,7 @@ import Notification from '@/utils/Notification'
 import { appointmentItem, OMC_NOT_FOUND } from '@/constants/conts'
 import UploadMedia from '@/services/patient/parials/UploadMedia.vue'
 import SegmentationSteps from '@/services/patient/parials/SegmentationSteps.vue'
+import AorticComponent from '@/services/patient/parials/AorticComponent.vue'
 
 const isOpen = ref(false)
 
@@ -94,9 +94,11 @@ const removeReception = async (index, appointment) => {
 let isUploading = ref(false)
 
 async function handleUpdateSingleAppointment(appointment) {
-  if (appointment){
+  if (appointment) {
     try {
-      await Notification.promise(InfoRequests.update_appointment(patchAppointment(appointment), appointment.appointment_id))
+      await Notification.promise(
+        InfoRequests.update_appointment(patchAppointment(appointment), appointment.appointment_id)
+      )
       if (id.value) {
         await store.getExaminationById(id.value)
       }
@@ -104,12 +106,13 @@ async function handleUpdateSingleAppointment(appointment) {
       Notification.error(OMC_NOT_FOUND)
     }
   }
-
 }
 
 const handleSubmitAppointment = async () => {
   try {
-    await Notification.promise(InfoRequests.add_appointment(patchAppointment(newAppointment), id.value))
+    await Notification.promise(
+      InfoRequests.add_appointment(patchAppointment(newAppointment), id.value)
+    )
     if (id.value) {
       await store.getExaminationById(id.value)
     }
@@ -118,7 +121,7 @@ const handleSubmitAppointment = async () => {
   }
 }
 
-function patchAppointment(appointment){
+function patchAppointment(appointment) {
   let fd = new FormData()
   const parseValue = (value) => value || ''
 
@@ -459,15 +462,14 @@ async function openAppointment(examination_id, appointment_id) {
                       id="EKG_data"
                       v-model="appointment.echocardiogram_data"
                       label="Данные по ЭхоКТ:"
+                      class="col-span-2"
                     />
-                    <div>
-                      <label class="block mb-2 font-medium text-gray-900">ЭхоКТ </label>
-                      <UploadMedia
-                        class="flex justify-center bg-gray-50 items-center w-full rounded-xl h-[14rem] 2xl:h-[12rem]"
-                        :appointment_id="appointment.appointment_id"
-                        api-url="info/add_file"
-                      />
-                    </div>
+                  </div>
+                  <div>
+                    <AorticComponent
+                      :is-aortic-uploaded="true"
+                      :appointment_id="appointment.appointment_id"
+                    />
                   </div>
                   <div>
                     <div class="flex justify-end items-center">
@@ -478,17 +480,6 @@ async function openAppointment(examination_id, appointment_id) {
                       >
                         Сохранить
                       </button>
-                    </div>
-                  </div>
-                  <!--   For demo          -->
-
-                  <div
-                    v-if="statusesMap.get(appointment.appointment_id)"
-                    class="grid grid-cols-3 gap-4"
-                  >
-                    <div v-for="(stat, index) in statusesList" :key="index">
-                      <h1 class="truncate p-2 bg-gray-100 rounded mb-4">съемка {{ index + 1 }}</h1>
-                      <SegmentationSteps :series_statuses="stat?.series_statuses" />
                     </div>
                   </div>
                 </div>
