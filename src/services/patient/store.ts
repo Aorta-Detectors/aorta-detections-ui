@@ -12,7 +12,8 @@ import type {
     IPatients,
     IRequestedPatient,
     IExamination, 
-    Appointment
+    Appointment,
+    Patient
 } from '@/services/patient/models/reception.interfaces'
 import { and } from '@vuelidate/validators'
 import { toRaw } from 'vue';
@@ -28,11 +29,13 @@ type TState = {
     slices: []
     status: any,
     status_map: any,
-    status_set: any
+    status_set: any,
+    patient: Patient,
 }
 export const usePatientStore = defineStore('patientStore', {
   state: (): TState => ({
     is_patient_exist: false,
+    patient: null,
     status: null,
     status_map: new Map(),
     status_set: new Set(),
@@ -378,6 +381,10 @@ export const usePatientStore = defineStore('patientStore', {
       console.log(state.appointment)
       return toRaw(state.appointment)
     },
+
+    patientGet(state: TState): Patient {
+      return toRaw(state.patient)
+    }
   },
 
   actions: {
@@ -456,15 +463,17 @@ export const usePatientStore = defineStore('patientStore', {
       try {
         const { data, status } = await InfoRequests.get_patient(OMSNumber)
         this.is_patient_exist = status === 200 && data !== undefined
+        this.patient = data
       } catch (e) {
         if (axios.isAxiosError(e) && e.response) {
           let resp = e?.response
           if (resp?.status === 404) {
             this.is_patient_exist = false
             Notification.error(OMC_NOT_FOUND)
+          } else {
+            throw e
           }
         }
-        throw e
       } finally {
         this.isLoading = false
       }

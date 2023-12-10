@@ -1,57 +1,76 @@
 <script setup lang="ts">
 import PageHeaderComponent from '@/components/common/PageHeaderComponent.vue'
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, onMounted, watch } from 'vue'
 import HeroIcon from '@/components/common/HeroIcon.vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import ResizableTextarea from '@/components/ResizableTextarea.vue'
 import jsPDF from 'jspdf';
+import { usePatientStore } from '@/services/patient/store'
+import { storeToRefs } from 'pinia'
 
-const appointment = reactive({
-  id: 2,
-  OMC: '0000 0000 0000 0000',
-  FIO: ' Gondran дизайна и композиции читаемый текст мешает сосредоточиться',
-  sex: 'M',
-  date: '10.10.2023',
-  height:
-    'Давно выяснено, что при оценке дизайна и композиции читаемый текст мешает сосредоточиться. Lorem Ipsum используют потому',
-  complaints:
-    'что тот обеспечивает более или менее стандартное заполнение шаблона, а также реальное распределение букв и пробелов в абзацах, которое не получается при простой'
-})
 
 const selectedImageIds = reactive([])
 
-const patientForm = reactive({
-  OMC: null,
-  FIO: null,
-
-  sex: null,
-  birth_date: null,
-  height: null,
-  weight: null,
-
-  blood_pressure: null,
-  pulse: null,
-  swelling: null,
-
-  complaints: null,
-  diagnosis: null,
-  complications: null,
-  accompanying_illnesses: null,
-
-  anamnesis_life: null,
-  anamnesis_illness: null,
-  EKG_data: null
-})
 
 const route = useRoute()
 
 const id = computed(() => route?.params?.id)
+const appointment_id = computed(() => route?.params?.appointment_id)
+const OMCnumber = computed(() => route?.query?.OMCnumber);
 
-function handleDateSelection(date) {
-  console.log(date)
-}
+const store = usePatientStore()
+const { appointmentGet, patientGet } = storeToRefs(store)
 
-function handleUpdateAppointment() {}
+onMounted(async () => {
+  if (appointment_id.value) {
+    await store.getAppointment(appointment_id.value)
+  }
+  if (OMCnumber.value) {
+    await store.getPatient(OMCnumber.value)
+  }
+})
+
+let appointmentForm = reactive({
+  user_id: null,
+  examination_id: null,
+  appointment_time: null,
+  blood_pressure: null,
+  pulse: null,
+  swell: null,
+  complains: null,
+  diagnosis: null,
+  disease_complications: null,
+  comorbidities: null,
+  disease_anamnesis: null,
+  life_anamnesis: null,
+  echocardiogram_data: null,
+  is_ready: null,
+  appointment_id: null,
+  doctor_name: null
+})
+
+let patientForm = reactive({
+  patient_id: null,
+  full_name: null,
+  birth_date: null,
+  is_male: null,
+  height: null,
+  weight: null,
+})
+
+watch(()=>appointmentGet.value, (newAppointment)=> {
+  if(newAppointment){
+    appointmentForm = JSON.parse(JSON.stringify(newAppointment))
+    appointmentForm.appointment_time = new Date(appointmentForm.appointment_time).toLocaleDateString()
+  }
+}, {immediate: true, deep: true} )
+
+watch(()=>patientGet.value, (newPatient)=> {
+  if(newPatient){
+    patientForm = JSON.parse(JSON.stringify(newPatient))
+  }
+}, {immediate: true, deep: true} )
+
 
 const content = ref(null)
 const initialCtY = 150
@@ -142,8 +161,8 @@ function addAorticImages(pdf) {
 </script>
 
 <template>
-  <div class="overflow-x-auto" ref='content' >
-    <PageHeaderComponent :title="`Отчет №${id} от 10.10.2023`" description="Врач Pama Gondran">
+  <div v-if="appointmentGet && patientGet" class="overflow-x-auto" ref='content' >
+    <PageHeaderComponent :title="`Отчет №${appointment_id} от ${appointmentForm.appointment_time}`" :description="`Врач ${appointmentForm.doctor_name}`">
       <div class="flex space-x-4">
         <button
           type="button"
@@ -181,19 +200,27 @@ function addAorticImages(pdf) {
           <h2 class="text-gray-400 text-xl">Диагноз</h2>
 
           <div class="text-black mt-6">
-            Дилатация восходящего отдела и аневризма брюшной аорты.
-            Выраженная аортальная недостаточность
+            {{ appointmentForm.diagnosis }}
           </div>
         </div>
         <div class="w-full mt-10 border p-6 bg-white h-[14rem]">
           <h2 class='text-gray-400 text-xl'>Информация о пациенте</h2>
-          <div class="mt-6">
-            <ul class="space-y-1  list-тщту list-inside">
+          <div class="mt-2">
+            <ul class="space-y-1 list-inside">
               <li class="font-bold text-2xl">
-                Пама Гондран
+                {{ patientForm.full_name }}
               </li>
               <li>
-                49 лет
+                {{ "Дата рождения: " + patientForm.birth_date }}
+              </li>
+              <li>
+                {{ "Рост: " + patientForm.height }}
+              </li>
+              <li>
+                {{ "Вес: " + patientForm.weight }}
+              </li>
+              <li>
+                {{ patientForm.is_male ? "Мужчина" : "Женщина" }}
               </li>
             </ul>
           </div>
@@ -265,56 +292,38 @@ function addAorticImages(pdf) {
        <div class="w-full lg:col-span-2 h-full ">
          <div class="grid grid-cols-1 gap-4 h-full">
            <div class="w-full col-span-2 border p-6 bg-white">
-             <h2 class="text-gray-400 text-xl">Данные КТ</h2>
+             <h2 class="text-gray-400 text-xl">Данные</h2>
 
              <div class="mt-6">
                <ul class="space-y-1 list-disc list-inside">
-                 <li class="">
-                   Аортальный клапан трехстворчатый
+                 <li v-if="appointmentForm.blood_pressure !== null" class="">
+                   {{ "Кровяное давление: " + appointmentForm.blood_pressure }}
                  </li>
-                 <li>
-                   Диаметр ФК АК 24,2*33,5 мМ
+                 <li v-if="appointmentForm.pulse !== null" class="">
+                   {{ "Пульс: " + appointmentForm.pulse }}
                  </li>
-                 <li>
-                   Диаметр синусов Вальсальвы 45,6*45,8 мм
+                 <li v-if="appointmentForm.swell !== null" class="">
+                   {{ "Отечность: " + appointmentForm.swell }}
                  </li>
-                 <li>
-                   Диаметр тубулярной части вд 48,2*48,4 Мм
+                 <li v-if="appointmentForm.complains !== null" class="">
+                   {{ "Жалобы: " + appointmentForm.complains }}
                  </li>
-                 <li>
-                   Диамето ВА перед БЦС 34,9*32 мм
+                 <li v-if="appointmentForm.disease_complications !== null" class="">
+                   {{ "Осложнения: " + appointmentForm.disease_complications }}
                  </li>
-                 <li>
-                   Диаметр дуги аорты 31.8*31,6 мм
-                 </li>
-                 <li>
-                   Коронарные артерии - отхождение типичное
-                 </li>
-                 <li>
-                   Наличие диссекции/аномалии +/-
-                 </li>
-                 <li>
-                   Периметры, длины окружностей, макс/мин/сред диаметры
+                 <li v-if="appointmentForm.comorbidities !== null" class="">
+                   {{ "Сопуствующие заболевания: " + appointmentForm.comorbidities }}
                  </li>
                </ul>
              </div>
            </div>
-           <div class="w-full col-span-2 h-full border p-6 bg-white">
+           <div v-if="appointmentForm.echocardiogram_data !== null" class="w-full col-span-2 h-full border p-6 bg-white">
              <h2>Данные ЭХОКГ</h2>
 
              <div class="mt-6">
                <ul class="space-y-1 list-disc list-inside">
                  <li class="">
-                   Степень AH - PISA - Объем регург 15 мл
-                 </li>
-                 <li>
-                   OB 25%.
-                 </li>
-                 <li>
-                   ЗС 45мм - МЖП 30мм
-                 </li>
-                 <li>
-                   КДО 25мл - КСО 24мл
+                   {{ appointmentForm.echocardiogram_data }}
                  </li>
                </ul>
              </div>
@@ -324,40 +333,7 @@ function addAorticImages(pdf) {
       </div>
 
       <div class="mt-8">
-        <div class="w-full  border p-6 bg-white mb-6">
-          <h2 class="text-gray-400 text-xl">Рекомендовано</h2>
-          <div class="mt-6">
-            <ul class="space-y-1 list-disc list-inside">
-              <li class="">
-                Динамическое наблюдение кардиолога
-              </li>
-              <li>
-                Контроль АД и ЧСС
-              </li>
-              <li>
-                Исключить психо-эмоциональный и Физический стресс
-              </li>
-              <li>
-                Исключить приемы с пробой Вальсальвы
-              </li>
-              <li>
-                Консультация кардиохирурга/сердечно-сосудистого хирурга
-              </li>
-              <li>
-                Имплантация стент-графта с брюшную аорту в плановом порядке
-              </li>
-              <li>
-                МСКТ-ангиография аорты через 1 год
-              </li>
-              <li>
-                ЭХОКГ через1 год
-              </li>
-              <li>
-                Консультация кардиохирурга через 1 ГОД
-              </li>
-            </ul>
-          </div>
-        </div>
+        
         <ResizableTextarea id="conclusion" label="Заключение"   />
         <div class="flex justify-between items-center mt-4">
           <div >

@@ -156,16 +156,17 @@ function closeModal() {
 }
 
 async function openModal() {
-  /*await store.getExamination(id.value)
+  await store.getExamination(id.value)
   console.log('openModal', appointmentsList)
-  isOpen.value = true*/
+  isOpen.value = true
 }
 
 async function openAppointment(examination_id, appointment_id) {
-  /*await router.push({
+  await router.push({
     name: 'ViewAppointmentReport',
-    params: { id: examination_id, appointment_id: appointment_id }
-  })*/
+    params: { id: examination_id, appointment_id: appointment_id },
+    query: { OMCnumber: examination.value.patient.patient_id }
+  })
 }
 </script>
 
