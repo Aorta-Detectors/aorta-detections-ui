@@ -69,6 +69,8 @@ export interface Appointment {
   pulse: number
   swell: string
   complains: string
+  doctor_name: string
+  file_hash: string
   diagnosis: string
   disease_complications: string
   comorbidities: string

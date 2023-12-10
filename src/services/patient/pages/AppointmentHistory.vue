@@ -367,9 +367,28 @@ async function openAppointment(examination_id, appointment_id) {
               </button>
               <details class="group">
                 <summary class="cursor-pointer flex justify-between items-center">
-                  <span class="group-hover:text-theme-primary0">{{
-                    `Прием  №${appointment?.appointment_id}`
-                  }}</span>
+                  <span class="flex flex-col">
+                    <span class="group-hover:text-theme-primary0">{{
+                      `Прием  №${appointment?.appointment_id}`
+                    }}</span>
+                    <span class="bg-gray-50 px-4 py-2 flex flex-col mt-3">
+                      <span class="text-gray-600 text-sm"
+                        >Врач {{ appointment?.doctor_name }}</span
+                      >
+                      <span
+                        v-if="!!appointment.file_hash"
+                        class="text-green-400 text-sm inline-flex space-x-1.5"
+                      >
+                        <HeroIcon
+                          icon-type="outline"
+                          icon-name="CheckCircleIcon"
+                          class="w-4 pt-0.5"
+                        />
+                        <span class="first-letter:capitalize">аорты загружены</span>
+                      </span>
+                    </span>
+                  </span>
+
                   <span class="text-gray-400">{{
                     `от ${convertToLocalTime(examination?.created_at)}`
                   }}</span>
@@ -468,7 +487,7 @@ async function openAppointment(examination_id, appointment_id) {
                   </div>
                   <div>
                     <AorticComponent
-                      :is-aortic-uploaded="true"
+                      :is-aortic-uploaded="!!appointment.file_hash"
                       :appointment_id="appointment.appointment_id"
                     />
                   </div>

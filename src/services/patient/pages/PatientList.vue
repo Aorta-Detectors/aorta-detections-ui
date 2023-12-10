@@ -10,10 +10,9 @@ import NoData from '@/components/NoData.vue'
 
 const router = useRouter()
 const store = usePatientStore()
-const { patientsList, totalPatientsPages, isLoading, currentPatientsPage } = storeToRefs(store)
+const { patientsList, isLoading  } = storeToRefs(store)
 
 onMounted(async () => {
-  console.log("patientsList: ", patientsList);
   await store.getPatientsList(1)
 })
 </script>
