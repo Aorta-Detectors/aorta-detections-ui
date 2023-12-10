@@ -17,10 +17,11 @@ const route = useRoute()
 const id = computed(() => route?.params?.id)
 const appointment_id = computed(() => route?.params?.appointment_id)
 const OMCnumber = computed(() => route?.query?.OMCnumber)
+console.log('fgfdgdfgd')
 
 const store = usePatientStore()
 const { appointmentGet, patientGet } = storeToRefs(store)
-
+console.log('ici',appointmentGet)
 onMounted(async () => {
   if (appointment_id.value) {
     await store.getAppointment(appointment_id.value)
@@ -343,7 +344,7 @@ const aorticDetails = [
                   <AorticRowDetails
                     v-for="inf in aorticDetails"
                     :label="inf.label"
-                    :label-key='inf.key'
+                    :label-key="inf.key"
                     :key="inf.key"
                     :appointment-form="appointmentForm"
                   />
