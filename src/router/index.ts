@@ -3,12 +3,13 @@ import HomePage from '../pages/HomePage.vue';
 import NotFoundPage from '../pages/NotFoundPage.vue';
 import { SecurityRoutes } from '@/services/security/router';
 import { PatientRoutes } from '@/services/patient/router';
+import LoginPageVue from '@/services/security/pages/LoginPage.vue';
 let localUser;
 const routes = [
   {
     path: '/',
     name: 'HomePage',
-    components: { default: HomePage },
+    components: { default: LoginPageVue },
     meta: {
       PageTitle: 'Aorta Detection'
     }

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import UploadMedia from '@/services/patient/parials/UploadMedia.vue'
-import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { reactive, ref } from 'vue'
 import InfoRequests from '@/services/patient/requests'
 import SegmentationSteps from '@/services/patient/parials/SegmentationSteps.vue'
 import HeroIcon from '@/components/common/HeroIcon.vue'
+
 const props = defineProps({
   appointment_id: {
     type: [String, Number],
@@ -16,55 +17,43 @@ const props = defineProps({
 })
 
 let statuses = reactive([])
-const intervalId = ref(null)
-
-onMounted(() => {
-  //pullStatus()
-})
-
-function pullStatus(){
-  if (props.appointment_id && statuses.length) {
-    intervalId.value = setInterval(() => {
-      handleGetAppointmentStatus(props.appointment_id)
-    }, 30000)
-  }
-}
 
 let isOpen = ref(false)
 let isFetchingStatus = ref(false)
 
-
 async function handleGetAppointmentStatus(id) {
   isFetchingStatus.value = true
-  try {
-    const { data, status } = await InfoRequests.get_status(id)
-    statuses = data?.serieses_statuses
-    isOpen.value = true
-  } catch (e) {
-    clearInterval(intervalId.value)
-    throw e
-  } finally {
-    isFetchingStatus.value = false
+  if (props.isAorticUploaded) {
+    try {
+      const { data } = await InfoRequests.get_status(id)
+      statuses = data?.serieses_statuses
+      isOpen.value = true
+    } catch (e) {
+      throw e
+    } finally {
+      isFetchingStatus.value = false
+    }
   }
 }
-
-onBeforeUnmount(() => {
-  clearInterval(intervalId.value)
-})
 </script>
 
 <template>
   <div>
     <div class="flex justify-between items-center">
       <label class="block mb-2 font-medium text-gray-900">ЭхоКТ </label>
-      <div class="text-green-600 text-sm inline-flex space-x-1.5">
+      <button
+        type="button"
+        @click.prevent="handleGetAppointmentStatus(props.appointment_id)"
+        v-if="isAorticUploaded"
+        class="text-sm inline-flex space-x-1.5"
+      >
         <HeroIcon
-          :class="isFetchingStatus ? 'animate-spin' : ''"
+          :class="{ 'animate-spin': isFetchingStatus }"
           icon-type="outline"
-          :icon-name="isFetchingStatus ? 'ArrowPathIcon' : 'CheckCircleIcon'"
+          icon-name="ArrowPathIcon"
         />
-        <p class="first-letter:capitalize">аорты загружены</p>
-      </div>
+        <p class="first-letter:capitalize">{{isFetchingStatus ? 'Обновляется...': 'Обновить'}}</p>
+      </button>
     </div>
     <UploadMedia
       v-if="!isAorticUploaded && !statuses.length"
@@ -72,7 +61,7 @@ onBeforeUnmount(() => {
       :appointment_id="props.appointment_id"
       @onUploadCompleted="handleGetAppointmentStatus(props.appointment_id)"
       api-url="info/add_file"
-      :id='`${props.appointment_id}_zipFile`'
+      :id="`${props.appointment_id}_zipFile`"
     />
     <div
       v-if="isAorticUploaded && !statuses.length && !isOpen"
