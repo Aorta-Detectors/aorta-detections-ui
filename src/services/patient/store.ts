@@ -388,21 +388,6 @@ export const usePatientStore = defineStore('patientStore', {
   },
 
   actions: {
-    async get_series_statuses(id: number | string) {
-      let result = false;
-      try {
-        const { data, status } = await InfoRequests.get_status(id) 
-        this.status = data
-        result = (data.serieses_statuses.length >= 1)
-        this.status_map.set(id, result)
-        this.status_set.add(result)
-        console.log("status map: ", this.status_map)
-        console.log("id: ", id, "result : ", result)
-      } catch (e) {
-        throw e
-      }
-      return result
-    },
     async getExaminationsList(page?: number, size?: number) {
       this.isLoading = true
       try {

@@ -91,7 +91,12 @@ async function handleGetAppointmentStatus(id) {
             :to="{
               name: 'ViewAppointmentReport',
               params: { id: examination?.examination_id, appointment_id: props.appointment_id },
-              query: { OMCnumber: examination?.patient?.patient_id }
+              query: {
+                OMCnumber: examination?.patient?.patient_id,
+                serieses_num: statuses.length,
+                series_id: index,
+                slices_num: stat?.slices_num
+              }
             }"
             >Посмотреть</router-link
           >
