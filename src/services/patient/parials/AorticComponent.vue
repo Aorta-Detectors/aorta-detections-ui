@@ -10,6 +10,10 @@ const props = defineProps({
     type: [String, Number],
     required: true
   },
+  examination: {
+    type: Object,
+    required: () => {}
+  },
   isAorticUploaded: {
     type: Boolean,
     required: true
@@ -52,7 +56,9 @@ async function handleGetAppointmentStatus(id) {
           icon-type="outline"
           icon-name="ArrowPathIcon"
         />
-        <p class="first-letter:capitalize">{{isFetchingStatus ? 'Обновляется...': 'Обновить'}}</p>
+        <p class="first-letter:capitalize">
+          {{ isFetchingStatus ? 'Обновляется...' : 'Обновить' }}
+        </p>
       </button>
     </div>
     <UploadMedia
@@ -75,9 +81,26 @@ async function handleGetAppointmentStatus(id) {
       </button>
     </div>
 
-    <div class="grid grid-cols-3 gap-4">
-      <div v-for="(stat, index) in statuses" :key="index">
-        <h1 class="truncate p-2 bg-gray-100 rounded mb-4">съемка {{ index + 1 }}</h1>
+    <div class="grid grid-cols-3 gap-4 mt-4">
+      <div v-for="(stat, index) in statuses" :key="index" class="bg-gray-100 p-4 rounded-2xl">
+        <div class="flex flex-row justify-between items-center mb-4">
+          <h1 class="truncate capitalize text-gray-500 rounded">съемка {{ index + 1 }}</h1>
+          <router-link
+            v-if="examination"
+            class="text-theme-primary0 transition-all duration-200 hover:text-white hover:bg-theme-primary0 text-sm rounded-xl px-4 py-2 bg-white"
+            :to="{
+              name: 'ViewAppointmentReport',
+              params: { id: examination?.examination_id, appointment_id: props.appointment_id },
+              query: {
+                OMCnumber: examination?.patient?.patient_id,
+                serieses_num: statuses.length,
+                series_id: index,
+                slices_num: stat?.slices_num
+              }
+            }"
+            >Посмотреть</router-link
+          >
+        </div>
         <SegmentationSteps :series_statuses="stat?.series_statuses" />
       </div>
     </div>

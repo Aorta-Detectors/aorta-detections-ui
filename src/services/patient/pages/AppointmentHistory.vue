@@ -34,45 +34,21 @@ let appForm = reactive({
   appointments: []
 })
 
-let is_ready_map = new Map()
-
 const route = useRoute()
 const router = useRouter()
 
 const store = usePatientStore()
-const { examination, statusesList, appointmentsList, statusesMap } = storeToRefs(store)
+const { examination, appointmentGet, appointmentsList } = storeToRefs(store)
 const id = computed(() => route?.params?.id)
-
 onMounted(async () => {
   if (id.value) {
     await store.getExaminationById(id.value)
   }
 })
 
-async function isFileLoaded(appointment_id) {
-  /*const result = await store.get_series_statuses(appointment_id)
-  return result*/
-}
-
 let newAppointment = reactive({
   ...appointmentItem
 })
-
-watch(
-  () => examination.value,
-  (newExamination) => {
-    if (newExamination) {
-      /*appForm = JSON.parse(JSON.stringify(newExamination))
-      for (const appointment of appForm.appointments) {
-        console.log(appointment.appointment_id)
-        let heh = isFileLoaded(appointment.appointment_id)
-        console.log(heh)
-        store.get_series_statuses(appointment.appointment_id)
-      }*/
-    }
-  },
-  { immediate: true, deep: true }
-)
 
 const removeReception = async (index, appointment) => {
   // TODO: do refactoring: just for demo
@@ -372,9 +348,7 @@ async function openAppointment(examination_id, appointment_id) {
                       `Прием  №${appointment?.appointment_id}`
                     }}</span>
                     <span class="bg-gray-50 px-4 py-2 flex flex-col mt-3">
-                      <span class="text-gray-600 text-sm"
-                        >Врач {{ appointment?.doctor_name }}</span
-                      >
+                      <span class="text-gray-600 text-sm">Врач {{ appointment?.doctor_name }}</span>
                       <span
                         v-if="!!appointment.file_hash"
                         class="text-green-400 text-sm inline-flex space-x-1.5"
@@ -489,6 +463,8 @@ async function openAppointment(examination_id, appointment_id) {
                     <AorticComponent
                       :is-aortic-uploaded="!!appointment.file_hash"
                       :appointment_id="appointment.appointment_id"
+                      :examination="examination"
+                      :slices_num="appointment.slices_num"
                     />
                   </div>
                   <div>
