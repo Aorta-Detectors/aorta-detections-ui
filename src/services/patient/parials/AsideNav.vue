@@ -22,10 +22,6 @@ onBeforeMount(async () => {
       <LogoComponent class="text-xl" />
 
       <div class="mt-8 space-y-2">
-        <router-link :to="{ name: 'Dashboard' }" class="btn" active-class="active-class-nav">
-          <HeroIcon icon-type="outline" icon-name="HomeIcon" />
-          <span>Dashboard</span>
-        </router-link>
         <router-link :to="{ name: 'AppointmentsHistory' }" class="btn" active-class="active-class-nav">
           <HeroIcon icon-type="outline" icon-name="ClockIcon" />
           <span class="whitespace-nowrap">История обследования</span>

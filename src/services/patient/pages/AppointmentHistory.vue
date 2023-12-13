@@ -3,7 +3,6 @@ import PageHeaderComponent from '@/components/common/PageHeaderComponent.vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import HeroIcon from '@/components/common/HeroIcon.vue'
 import { useRoute, useRouter } from 'vue-router'
-import VueDatePicker from '@vuepic/vue-datepicker'
 import ResizableTextarea from '@/components/ResizableTextarea.vue'
 import { usePatientStore } from '@/services/patient/store'
 import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
@@ -15,6 +14,7 @@ import Notification from '@/utils/Notification'
 import { appointmentItem, OMC_NOT_FOUND } from '@/constants/conts'
 import UploadMedia from '@/services/patient/parials/UploadMedia.vue'
 import SegmentationSteps from '@/services/patient/parials/SegmentationSteps.vue'
+import AorticComponent from '@/services/patient/parials/AorticComponent.vue'
 
 const isOpen = ref(false)
 
@@ -34,45 +34,21 @@ let appForm = reactive({
   appointments: []
 })
 
-let is_ready_map = new Map()
-
 const route = useRoute()
 const router = useRouter()
 
 const store = usePatientStore()
-const { examination, statusesList, appointmentsList, statusesMap } = storeToRefs(store)
+const { examination, appointmentGet, appointmentsList } = storeToRefs(store)
 const id = computed(() => route?.params?.id)
-
 onMounted(async () => {
   if (id.value) {
     await store.getExaminationById(id.value)
   }
 })
 
-async function isFileLoaded(appointment_id) {
-  /*const result = await store.get_series_statuses(appointment_id)
-  return result*/
-}
-
 let newAppointment = reactive({
   ...appointmentItem
 })
-
-watch(
-  () => examination.value,
-  (newExamination) => {
-    if (newExamination) {
-      /*appForm = JSON.parse(JSON.stringify(newExamination))
-      for (const appointment of appForm.appointments) {
-        console.log(appointment.appointment_id)
-        let heh = isFileLoaded(appointment.appointment_id)
-        console.log(heh)
-        store.get_series_statuses(appointment.appointment_id)
-      }*/
-    }
-  },
-  { immediate: true, deep: true }
-)
 
 const removeReception = async (index, appointment) => {
   // TODO: do refactoring: just for demo
@@ -94,9 +70,11 @@ const removeReception = async (index, appointment) => {
 let isUploading = ref(false)
 
 async function handleUpdateSingleAppointment(appointment) {
-  if (appointment){
+  if (appointment) {
     try {
-      await Notification.promise(InfoRequests.update_appointment(patchAppointment(appointment), appointment.appointment_id))
+      await Notification.promise(
+        InfoRequests.update_appointment(patchAppointment(appointment), appointment.appointment_id)
+      )
       if (id.value) {
         await store.getExaminationById(id.value)
       }
@@ -104,12 +82,13 @@ async function handleUpdateSingleAppointment(appointment) {
       Notification.error(OMC_NOT_FOUND)
     }
   }
-
 }
 
 const handleSubmitAppointment = async () => {
   try {
-    await Notification.promise(InfoRequests.add_appointment(patchAppointment(newAppointment), id.value))
+    await Notification.promise(
+      InfoRequests.add_appointment(patchAppointment(newAppointment), id.value)
+    )
     if (id.value) {
       await store.getExaminationById(id.value)
     }
@@ -118,7 +97,7 @@ const handleSubmitAppointment = async () => {
   }
 }
 
-function patchAppointment(appointment){
+function patchAppointment(appointment) {
   let fd = new FormData()
   const parseValue = (value) => value || ''
 
@@ -153,16 +132,17 @@ function closeModal() {
 }
 
 async function openModal() {
-  /*await store.getExamination(id.value)
+  await store.getExamination(id.value)
   console.log('openModal', appointmentsList)
-  isOpen.value = true*/
+  isOpen.value = true
 }
 
 async function openAppointment(examination_id, appointment_id) {
-  /*await router.push({
+  await router.push({
     name: 'ViewAppointmentReport',
-    params: { id: examination_id, appointment_id: appointment_id }
-  })*/
+    params: { id: examination_id, appointment_id: appointment_id },
+    query: { OMCnumber: examination.value.patient.patient_id }
+  })
 }
 </script>
 
@@ -363,9 +343,26 @@ async function openAppointment(examination_id, appointment_id) {
               </button>
               <details class="group">
                 <summary class="cursor-pointer flex justify-between items-center">
-                  <span class="group-hover:text-theme-primary0">{{
-                    `Прием  №${appointment?.appointment_id}`
-                  }}</span>
+                  <span class="flex flex-col">
+                    <span class="group-hover:text-theme-primary0">{{
+                      `Прием  №${appointment?.appointment_id}`
+                    }}</span>
+                    <span class="bg-gray-50 px-4 py-2 flex flex-col mt-3">
+                      <span class="text-gray-600 text-sm">Врач {{ appointment?.doctor_name }}</span>
+                      <span
+                        v-if="!!appointment.file_hash"
+                        class="text-green-400 text-sm inline-flex space-x-1.5"
+                      >
+                        <HeroIcon
+                          icon-type="outline"
+                          icon-name="CheckCircleIcon"
+                          class="w-4 pt-0.5"
+                        />
+                        <span class="first-letter:capitalize">аорты загружены</span>
+                      </span>
+                    </span>
+                  </span>
+
                   <span class="text-gray-400">{{
                     `от ${convertToLocalTime(examination?.created_at)}`
                   }}</span>
@@ -459,15 +456,16 @@ async function openAppointment(examination_id, appointment_id) {
                       id="EKG_data"
                       v-model="appointment.echocardiogram_data"
                       label="Данные по ЭхоКТ:"
+                      class="col-span-2"
                     />
-                    <div>
-                      <label class="block mb-2 font-medium text-gray-900">ЭхоКТ </label>
-                      <UploadMedia
-                        class="flex justify-center bg-gray-50 items-center w-full rounded-xl h-[14rem] 2xl:h-[12rem]"
-                        :appointment_id="appointment.appointment_id"
-                        api-url="info/add_file"
-                      />
-                    </div>
+                  </div>
+                  <div>
+                    <AorticComponent
+                      :is-aortic-uploaded="!!appointment.file_hash"
+                      :appointment_id="appointment.appointment_id"
+                      :examination="examination"
+                      :slices_num="appointment.slices_num"
+                    />
                   </div>
                   <div>
                     <div class="flex justify-end items-center">
@@ -478,17 +476,6 @@ async function openAppointment(examination_id, appointment_id) {
                       >
                         Сохранить
                       </button>
-                    </div>
-                  </div>
-                  <!--   For demo          -->
-
-                  <div
-                    v-if="statusesMap.get(appointment.appointment_id)"
-                    class="grid grid-cols-3 gap-4"
-                  >
-                    <div v-for="(stat, index) in statusesList" :key="index">
-                      <h1 class="truncate p-2 bg-gray-100 rounded mb-4">съемка {{ index + 1 }}</h1>
-                      <SegmentationSteps :series_statuses="stat?.series_statuses" />
                     </div>
                   </div>
                 </div>
