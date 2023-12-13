@@ -21,12 +21,13 @@ const appointment_id = computed(() => route?.params?.appointment_id)
 const OMCnumber = computed(() => route?.query?.OMCnumber)
 let isUploading = ref(false)
 
+let aortics = ref(null)
+
 const store = usePatientStore()
 
 const { appointmentGet, patientGet } = storeToRefs(store)
 onMounted(async () => {
   isUploading.value = true // TODO: use it for loading state
-
   /*
   * TODO: create an action for this logic
   * */
@@ -43,11 +44,12 @@ onMounted(async () => {
       }).toString())
     }
 
-
     if(queries.length){
       await Promise.all(
         Object.values(queries).map(async (param) => {
           const { data } = await InfoRequests.get_slice(param)
+
+          //TODO: get image URL or Base64 and then display image
           images.push(data)
         })
       )
@@ -55,7 +57,7 @@ onMounted(async () => {
           isUploading.value = false
         })
         .catch(() => {
-          this.isUploading = false
+          isUploading.value = false
         })
     }
   }
@@ -235,6 +237,11 @@ const aorticDetails = [
     key: 'comorbidities'
   }
 ]
+
+let testIMage = ref(null)
+
+
+
 </script>
 
 <template>
@@ -339,7 +346,7 @@ const aorticDetails = [
               </div>
             </div>
           </div>
-          <div class='grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3'>
+          <div class='grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3' id='aortics'>
             <div
               v-for='(img, index) in images'
               :key='index'
@@ -462,4 +469,3 @@ const aorticDetails = [
   </div>
 </template>
 
-<style scoped></style>
