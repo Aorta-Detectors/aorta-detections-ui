@@ -35,7 +35,7 @@ export default class InfoRequests {
         return api.get(`${infoBasePath}/get_appointment?appointment_id=${id}`);
     }
     static async get_slice(param) {
-        return api.get(`${infoBasePath}/get_slice?${param}`);
+        return api.get(`${infoBasePath}/get_rotated_slice_masked?${param}`);
     }
 
     /*

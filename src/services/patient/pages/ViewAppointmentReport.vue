@@ -1,17 +1,15 @@
-<script setup lang='ts'>
+<script setup lang="ts">
 import PageHeaderComponent from '@/components/common/PageHeaderComponent.vue'
 import { computed, reactive, ref, onMounted, watch } from 'vue'
 import HeroIcon from '@/components/common/HeroIcon.vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import ResizableTextarea from '@/components/ResizableTextarea.vue'
-import jsPDF from 'jspdf'
 import { usePatientStore } from '@/services/patient/store'
 import { storeToRefs } from 'pinia'
-import { hasOwnProperty } from 'js-cookie'
 import AorticRowDetails from '@/services/patient/parials/AorticRowDetails.vue'
 import InfoRequests from '@/services/patient/requests'
-
-const selectedImageIds = reactive([])
+import GalleryComponent from '@/services/patient/parials/GalleryComponent.vue'
+import GalleryItemComponent from '@/services/patient/parials/GalleryItemComponent.vue'
 
 const route = useRoute()
 let images = reactive([])
@@ -20,8 +18,11 @@ const id = computed(() => route?.params?.id)
 const appointment_id = computed(() => route?.params?.appointment_id)
 const OMCnumber = computed(() => route?.query?.OMCnumber)
 let isUploading = ref(false)
-
-let aortics = ref(null)
+const options = reactive({
+  Carousel: {
+    infinite: false
+  }
+})
 
 const store = usePatientStore()
 
@@ -29,31 +30,34 @@ const { appointmentGet, patientGet } = storeToRefs(store)
 onMounted(async () => {
   isUploading.value = true // TODO: use it for loading state
   /*
-  * TODO: create an action for this logic
-  * */
+   * TODO: create an action for this logic
+   * */
   const slices_num = route?.query?.slices_num
   const series_id = route?.query?.series_id
   const queries = []
   const generateParams = (form) => new URLSearchParams(form)
   if (slices_num && series_id) {
     for (let i = 1; i <= +slices_num; i++) {
-      queries.push(generateParams({
-        slice_num: i,
-        series_id: +series_id,
-        appointment_id: appointment_id.value
-      }).toString())
+      queries.push(
+        generateParams({
+          slice_num: i,
+          series_id: +series_id,
+          appointment_id: appointment_id.value
+        }).toString()
+      )
     }
 
-    if(queries.length){
+    if (queries.length) {
       await Promise.all(
         Object.values(queries).map(async (param) => {
           const { data } = await InfoRequests.get_slice(param)
 
-          //TODO: get image URL or Base64 and then display image
-          images.push(data)
+          if ('file' in data) {
+            images.push(data.file)
+          }
         })
       )
-        .then(response => {
+        .then((response) => {
           isUploading.value = false
         })
         .catch(() => {
@@ -61,7 +65,6 @@ onMounted(async () => {
         })
     }
   }
-
 
   if (appointment_id.value) {
     await store.getAppointment(appointment_id.value)
@@ -123,93 +126,6 @@ watch(
 )
 
 const content = ref(null)
-const initialCtY = 150
-const ctData = [
-  {
-    y: initialCtY,
-    value: 'Аортальный клапан трехстворчатый'
-  },
-  {
-    y: initialCtY + 10,
-    value: 'Диаметр ФК АК 24,2*33,5 мМ'
-  },
-  {
-    y: initialCtY + 20,
-    value: 'Диаметр синусов Вальсальвы 45,6*45,8 мм'
-  },
-  {
-    y: initialCtY + 30,
-    value: 'Диаметр тубулярной части вд 48,2*48,4 Мм'
-  }
-]
-
-function addHeader(pdf) {
-  pdf.setFontSize(20)
-  pdf.text('Отчет', 20, 20)
-  pdf.line(20, 25, 190, 25)
-}
-
-const img =
-  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRw1J6q6gTxhkpucX2Vw6QqITvYk2UPs-weH2aLZKKY1AH1tSp8-oqZ2_MZsW2HT7wUDk4&usqp=CAU'
-/*function generatePDF() {
-  const pdf = new jsPDF()
-  pdf.setFont('arial-unicode-ms.ttf', 'arial-unicode-ms', 'normal')
-  addReportDetails(pdf)
-  addPatientInfo(pdf)
-  /!*addDiagnosis(pdf);
-  addCtData(pdf)
-  addAorticValveMeasurements(pdf);
-  addAorticImages(pdf);*!/
-
-  pdf.save('medical-report.pdf')
-}
-
-function addReportDetails(pdf) {
-  pdf.setFontSize(18)
-  pdf.text('Отчет', 20, 20)
-  pdf.line(20, 25, 190, 25)
-}
-
-function addPatientInfo(pdf) {
-  pdf.setFontSize(14)
-  pdf.text('Информация о пациенте', 20, 40)
-  pdf.text('ФИО: John Doe', 20, 50)
-  pdf.text('Возраст: January 1, 1980', 20, 60)
-  pdf.text('Пол: Male', 20, 70)
-  pdf.text('Отчет №3 от 10.10.2023', 20, 80)
-  pdf.text('№ обследования: 4111154552215222 ', 20, 100)
-}
-function addDiagnosis(pdf) {
-  pdf.setFontSize(14)
-  pdf.text('Диагноз', 20, 120)
-  pdf.text(
-    'Дилатация восходящего отдела и аневризма брюшной аорты. Выраженная аортальная недостаточность',
-    20,
-    130
-  )
-}
-function addCtData(pdf) {
-  pdf.setFontSize(14)
-  ctData.forEach((el) => {
-    pdf.text(el.value, 20, el.y)
-  })
-}
-
-function addAorticValveMeasurements(pdf) {
-  pdf.setFontSize(16)
-  pdf.text('Данные КТ', 20, 200)
-  pdf.text('Aortic Diameter: 3.2 cm', 20, 210)
-  pdf.text('Aortic Valve Area: 2.0 cm²', 20, 220)
-  pdf.text('Peak Aortic Velocity: 1.5 m/s', 20, 330)
-}
-
-function addAorticImages(pdf) {
-  const aorticImage1 = img
-  const aorticImage2 = img
-
-  pdf.addImage(aorticImage1, 'JPEG', 20, 150, 80, 60)
-  pdf.addImage(aorticImage2, 'JPEG', 110, 150, 80, 60)
-}*/
 
 const aorticDetails = [
   {
@@ -238,62 +154,65 @@ const aorticDetails = [
   }
 ]
 
-let testIMage = ref(null)
-
-
+function getSliceInfo(id){
+  /*
+  * TODO: use id to fetch details
+  * */
+  console.log(id)
+}
 
 </script>
 
 <template>
-  <div v-if='appointmentGet && patientGet' class='overflow-x-auto' ref='content'>
+  <div v-if="appointmentGet && patientGet" class="overflow-x-auto" ref="content">
     <PageHeaderComponent
-      :title='`Отчет №${appointment_id} от ${appointmentForm.appointment_time}`'
-      :description='`Врач ${appointmentForm.doctor_name}`'
+      :title="`Отчет №${appointment_id} от ${appointmentForm.appointment_time}`"
+      :description="`Врач ${appointmentForm.doctor_name}`"
     >
-      <div class='flex space-x-4'>
+      <div class="flex space-x-4">
         <button
-          type='button'
-          id='print-list'
-          class='flex space-x-2 px-2 py-2 rounded-md bg-white border hover:bg-gray-50 outline-none'
+          type="button"
+          id="print-list"
+          class="flex space-x-2 px-2 py-2 rounded-md bg-white border hover:bg-gray-50 outline-none"
         >
           <HeroIcon
-            icon-type='outline'
-            icon-name='PencilSquareIcon'
-            class='block h-6 w-6'
-            aria-hidden='true'
+            icon-type="outline"
+            icon-name="PencilSquareIcon"
+            class="block h-6 w-6"
+            aria-hidden="true"
           />
           <span>Редактировать</span>
         </button>
         <button
-          type='button'
-          id='print-list'
-          class='flex space-x-2 px-2 py-2 rounded-md bg-white border hover:bg-gray-50 outline-none'
+          type="button"
+          id="print-list"
+          class="flex space-x-2 px-2 py-2 rounded-md bg-white border hover:bg-gray-50 outline-none"
         >
           <HeroIcon
-            icon-type='outline'
-            icon-name='PrinterIcon'
-            class='block h-6 w-6'
-            aria-hidden='true'
+            icon-type="outline"
+            icon-name="PrinterIcon"
+            class="block h-6 w-6"
+            aria-hidden="true"
           />
           <span>Экспорт</span>
         </button>
       </div>
     </PageHeaderComponent>
 
-    <div class=''>
-      <div class='grid grid-cols-1 lg:grid-cols-2 gap-3'>
-        <div class='w-full mt-10 border p-6 bg-white h-[14rem]'>
-          <h2 class='text-gray-400 text-xl'>Диагноз</h2>
+    <div class="">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div class="w-full mt-10 border p-6 bg-white h-[14rem]">
+          <h2 class="text-gray-400 text-xl">Диагноз</h2>
 
-          <div class='text-black mt-6'>
+          <div class="text-black mt-6">
             {{ appointmentForm.diagnosis }}
           </div>
         </div>
-        <div class='w-full mt-10 border p-6 bg-white h-[14rem]'>
-          <h2 class='text-gray-400 text-xl'>Информация о пациенте</h2>
-          <div class='mt-2'>
-            <ul class='space-y-1 list-inside'>
-              <li class='font-bold text-2xl'>
+        <div class="w-full mt-10 border p-6 bg-white h-[14rem]">
+          <h2 class="text-gray-400 text-xl">Информация о пациенте</h2>
+          <div class="mt-2">
+            <ul class="space-y-1 list-inside">
+              <li class="font-bold text-2xl">
                 {{ patientForm.full_name }}
               </li>
               <li>
@@ -313,98 +232,82 @@ let testIMage = ref(null)
         </div>
       </div>
 
-      <div class='grid grid-cols-1 lg:grid-cols-5 gap-3 mt-4'>
-        <div class='bg-white lg:col-span-3 border p-4'>
-          <div class='flex justify-between w-full pb-2'>
-            <h2 class=''>Сегментация аорты</h2>
-            <div class='flex space-x-2'>
-              <button class='shadow p-1'>
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-3 mt-4">
+        <div class="bg-white lg:col-span-3 border p-4">
+          <div class="flex justify-between w-full pb-2">
+            <h2 class="">Сегментация аорты</h2>
+            <div class="flex space-x-2">
+              <button class="shadow p-1">
                 <HeroIcon
-                  icon-type='outline'
-                  icon-name='BarsArrowDownIcon'
-                  class='block h-4 w-6'
-                  aria-hidden='true'
+                  icon-type="outline"
+                  icon-name="BarsArrowDownIcon"
+                  class="block h-4 w-6"
+                  aria-hidden="true"
                 />
               </button>
               <div>
-                <button class='shadow p-1'>
+                <button class="shadow p-1">
                   <HeroIcon
-                    icon-type='outline'
-                    icon-name='ChevronLeftIcon'
-                    class='block h-4 w-6'
-                    aria-hidden='true'
+                    icon-type="outline"
+                    icon-name="ChevronLeftIcon"
+                    class="block h-4 w-6"
+                    aria-hidden="true"
                   />
                 </button>
-                <button class='shadow p-1'>
+                <button class="shadow p-1">
                   <HeroIcon
-                    icon-type='outline'
-                    icon-name='ChevronRightIcon'
-                    class='block h-4 w-6'
-                    aria-hidden='true'
+                    icon-type="outline"
+                    icon-name="ChevronRightIcon"
+                    class="block h-4 w-6"
+                    aria-hidden="true"
                   />
                 </button>
               </div>
             </div>
           </div>
-          <div class='grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3' id='aortics'>
-            <div
-              v-for='(img, index) in images'
-              :key='index'
-              class='relative group h-[12rem] w-full bg-white shadow p-1'
+          <div>
+            <GalleryComponent
+              v-if="images && images.length"
+              :options="options"
+              class="grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3"
             >
-              <span
-                class='absolute text-xs left-4 bottom-4 bg-white w-5 h-5 flex justify-center items-center rounded-full flex-shrink-0'
-              >{{ index + 1 }}</span
-              >
-              <div class='absolute right-4 top-4 group-hover:flex'>
-                <input
-                  :id='index'
-                  type='checkbox'
-                  v-model='selectedImageIds'
-                  :value='index'
-                  class='accent-theme-primary0 z-10 w-6 h-6'
-                />
-              </div>
-
-              <label :for='index'>
-                <img
-                  class='h-full max-w-full w-full object-cover'
-                  :src='img'
-                  alt='aortic'
-                />
-                <span
-                  class='absolute inset-x-0 bottom-0 h-16 2xl:h-36 transition-all duration-200 bg-gradient-to-t group-hover:flex hidden from-theme-base-bg opacity-40'
-                />
-              </label>
-            </div>
+              <GalleryItemComponent
+                v-for="(img, index) in images"
+                :key="index"
+                @onGetSliceInfo="getSliceInfo"
+                :id="index"
+                :src="img"
+                alt="aortic segment"
+              />
+            </GalleryComponent>
           </div>
         </div>
-        <div class='w-full lg:col-span-2 h-full'>
-          <div class='grid grid-cols-1 gap-4 h-full'>
-            <div class='w-full col-span-2 border p-6 bg-white'>
-              <h2 class='text-gray-400 text-xl'>Данные</h2>
+        <div class="w-full lg:col-span-2 h-full">
+          <div class="grid grid-cols-1 gap-4 h-full">
+            <div class="w-full col-span-2 border p-6 bg-white">
+              <h2 class="text-gray-400 text-xl">Данные</h2>
 
-              <div class='mt-6'>
-                <ul class='space-y-1 list-disc list-inside'>
+              <div class="mt-6">
+                <ul class="space-y-1 list-disc list-inside">
                   <AorticRowDetails
-                    v-for='inf in aorticDetails'
-                    :label='inf.label'
-                    :label-key='inf.key'
-                    :key='inf.key'
-                    :appointment-form='appointmentForm'
+                    v-for="inf in aorticDetails"
+                    :label="inf.label"
+                    :label-key="inf.key"
+                    :key="inf.key"
+                    :appointment-form="appointmentForm"
                   />
                 </ul>
               </div>
             </div>
             <div
-              v-if='appointmentForm.echocardiogram_data !== null'
-              class='w-full col-span-2 h-full border p-6 bg-white'
+              v-if="appointmentForm.echocardiogram_data !== null"
+              class="w-full col-span-2 h-full border p-6 bg-white"
             >
               <h2>Данные ЭХОКГ</h2>
 
-              <div class='mt-6'>
-                <ul class='space-y-1 list-disc list-inside'>
-                  <li class=''>
+              <div class="mt-6">
+                <ul class="space-y-1 list-disc list-inside">
+                  <li class="">
                     {{ appointmentForm.echocardiogram_data }}
                   </li>
                 </ul>
@@ -414,52 +317,52 @@ let testIMage = ref(null)
         </div>
       </div>
 
-      <div class='mt-8'>
-        <ResizableTextarea id='conclusion' label='Заключение' />
-        <div class='flex justify-between items-center mt-4'>
+      <div class="mt-8">
+        <ResizableTextarea id="conclusion" label="Заключение" />
+        <div class="flex justify-between items-center mt-4">
           <div>
-            <label for='blood_pressure' class='block mb-2 text-sm font-medium text-gray-900'
-            >Результаты согласуются ?</label
+            <label for="blood_pressure" class="block mb-2 text-sm font-medium text-gray-900"
+              >Результаты согласуются ?</label
             >
-            <div class='flex space-x-4'>
+            <div class="flex space-x-4">
               <button
-                type='button'
-                id='print-list'
-                class='flex space-x-2 px-2 py-2 rounded-md bg-white border hover:bg-gray-50 outline-none'
+                type="button"
+                id="print-list"
+                class="flex space-x-2 px-2 py-2 rounded-md bg-white border hover:bg-gray-50 outline-none"
               >
                 <HeroIcon
-                  icon-type='outline'
-                  icon-name='HandThumbUpIcon'
-                  class='block h-6 w-6'
-                  aria-hidden='true'
+                  icon-type="outline"
+                  icon-name="HandThumbUpIcon"
+                  class="block h-6 w-6"
+                  aria-hidden="true"
                 />
                 <span>Да</span>
               </button>
               <button
-                type='button'
-                id='print-list'
-                class='flex space-x-2 px-2 py-2 rounded-md bg-white border hover:bg-gray-50 outline-none'
+                type="button"
+                id="print-list"
+                class="flex space-x-2 px-2 py-2 rounded-md bg-white border hover:bg-gray-50 outline-none"
               >
                 <HeroIcon
-                  icon-type='outline'
-                  icon-name='HandThumbDownIcon'
-                  class='block h-6 w-6'
-                  aria-hidden='true'
+                  icon-type="outline"
+                  icon-name="HandThumbDownIcon"
+                  class="block h-6 w-6"
+                  aria-hidden="true"
                 />
                 <span>Нет</span>
               </button>
             </div>
           </div>
           <button
-            type='button'
-            id='print-list'
-            class='text-white bg-theme-primary0 font-medium rounded-md text-xl px-5 py-3 mr-2 focus:outline-none flex space-x-2 outline-none'
+            type="button"
+            id="print-list"
+            class="text-white bg-theme-primary0 font-medium rounded-md text-xl px-5 py-3 mr-2 focus:outline-none flex space-x-2 outline-none"
           >
             <HeroIcon
-              icon-type='outline'
-              icon-name='PrinterIcon'
-              class='block h-6 w-6'
-              aria-hidden='true'
+              icon-type="outline"
+              icon-name="PrinterIcon"
+              class="block h-6 w-6"
+              aria-hidden="true"
             />
             <span>Экспорт</span>
           </button>
@@ -468,4 +371,3 @@ let testIMage = ref(null)
     </div>
   </div>
 </template>
-
